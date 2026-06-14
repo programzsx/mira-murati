@@ -1,0 +1,73 @@
+<% if (page.category) { %>
+<!-- Single Category Page -->
+<div class="category-page">
+  <h1 class="page-title"><%= __('category') %>: <%= page.category %></h1>
+
+  <% if (page.posts && page.posts.length > 0) { %>
+  <div class="posts">
+    <% page.posts.each(function(post) { %>
+      <%- partial('_partial/article', { post: post, index: true }) %>
+    <% }) %>
+  </div>
+  <% } else { %>
+  <p class="empty"><%= __('no_posts') %></p>
+  <% } %>
+
+  <%- partial('_partial/pagination') %>
+</div>
+<% } else { %>
+<!-- Categories Index Page -->
+<div class="categories-index">
+  <h1 class="page-title"><%= __('categories') %></h1>
+
+  <%
+  // Build category tree: top-level vs children by parent _id
+  var allCats = [];
+  site.categories.each(function(c) { allCats.push(c); });
+  
+  var topCats = [];
+  var childMap = {};
+  
+  allCats.forEach(function(cat) {
+    if (!cat.parent) {
+      topCats.push(cat);
+    } else {
+      var pid = cat.parent;
+      if (!childMap[pid]) childMap[pid] = [];
+      childMap[pid].push(cat);
+    }
+  });
+  
+  // Recursive helper to render a category and its subtree
+  function renderCat(cat, depth) {
+    var html = '<li class="taxonomy-item">';
+    html += '<a class="taxonomy-link" href="' + url_for(cat.path) + '">';
+    html += '<span class="taxonomy-name">' + cat.name + '</span>';
+    html += '<span class="taxonomy-count">' + cat.posts.length + '</span>';
+    html += '</a>';
+    
+    var children = childMap[cat._id] || [];
+    if (children.length > 0) {
+      html += '<ul class="taxonomy-sub">';
+      children.forEach(function(sub) {
+        html += renderCat(sub, depth + 1);
+      });
+      html += '</ul>';
+    }
+    
+    html += '</li>';
+    return html;
+  }
+  %>
+
+  <% if (topCats.length > 0) { %>
+  <ul class="taxonomy-list">
+    <% topCats.forEach(function(cat) { %>
+    <%- renderCat(cat, 0) %>
+    <% }) %>
+  </ul>
+  <% } else { %>
+  <p class="empty"><%= __('no_categories') %></p>
+  <% } %>
+</div>
+<% } %>

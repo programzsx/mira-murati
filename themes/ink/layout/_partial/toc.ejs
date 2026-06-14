@@ -1,0 +1,16 @@
+<% if (theme.toc && theme.toc.enable) { %>
+  <%
+  var tocContent = toc(post.content, { max_depth: theme.toc.max_depth || 3 });
+  %>
+  <% if (tocContent && tocContent.trim().length > 0) { %>
+  <aside class="toc">
+    <div class="toc-header">
+      <span class="toc-title"><%= __('toc') %></span>
+      <button class="toc-toggle" aria-label="Toggle TOC">☰</button>
+    </div>
+    <nav class="toc-body">
+      <%- tocContent %>
+    </nav>
+  </aside>
+  <% } %>
+<% } %>

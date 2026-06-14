@@ -1,0 +1,25 @@
+<div class="archive">
+  <h1 class="page-title"><%= __('archive') %></h1>
+
+  <% var yearlyPosts = {}; %>
+  <% page.posts.each(function(post) { %>
+    <% var year = date(post.date, 'YYYY'); %>
+    <% if (!yearlyPosts[year]) yearlyPosts[year] = []; %>
+    <% yearlyPosts[year].push(post); %>
+  <% }) %>
+
+  <% for (var year in yearlyPosts) { %>
+  <section class="archive-year">
+    <h2 class="archive-year-title"><%= year %></h2>
+    <ul class="archive-list">
+      <% yearlyPosts[year].forEach(function(post) { %>
+      <li class="archive-item">
+        <time datetime="<%= date_xml(post.date) %>"><%= date(post.date, 'MM-DD') %></time>
+        <a href="<%- url_for(post.path) %>"><%= post.title %></a>
+      </li>
+      <% }) %>
+    </ul>
+  </section>
+  <% } %>
+</div>
+<%- partial('_partial/pagination') %>

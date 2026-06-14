@@ -1,0 +1,48 @@
+<% if (page.tag) { %>
+<!-- Single Tag Page -->
+<div class="tag-page">
+  <h1 class="page-title"><%= __('tag') %>: <%= page.tag %></h1>
+
+  <% if (page.posts && page.posts.length > 0) { %>
+  <div class="posts">
+    <% page.posts.each(function(post) { %>
+      <%- partial('_partial/article', { post: post, index: true }) %>
+    <% }) %>
+  </div>
+  <% } else { %>
+  <p class="empty"><%= __('no_posts') %></p>
+  <% } %>
+
+  <%- partial('_partial/pagination') %>
+</div>
+<% } else { %>
+<!-- Tags Index Page -->
+<div class="tags-index">
+  <h1 class="page-title"><%= __('tags') %></h1>
+
+  <%
+  // Compute max post count for tag sizing
+  var maxCount = 1;
+  site.tags.each(function(t) {
+    if (t.posts.length > maxCount) maxCount = t.posts.length;
+  });
+  %>
+
+  <% if (site.tags.length > 0) { %>
+  <div class="tag-cloud">
+    <% site.tags.each(function(tag) { %>
+    <%
+      var ratio = tag.posts.length / maxCount;
+      var size = ratio < 0.3 ? 's' : (ratio < 0.6 ? 'm' : 'l');
+    %>
+    <a class="tag-cloud-item tag-<%= size %>" href="<%- url_for(tag.path) %>">
+      <%= tag.name %>
+      <span class="tag-cloud-count"><%= tag.posts.length %></span>
+    </a>
+    <% }) %>
+  </div>
+  <% } else { %>
+  <p class="empty"><%= __('no_tags') %></p>
+  <% } %>
+</div>
+<% } %>

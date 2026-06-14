@@ -1,0 +1,19 @@
+<% if (page.total > 1) { %>
+<nav class="pagination">
+  <div class="pagination-inner">
+    <% if (page.prev) { %>
+    <a class="prev" href="<%- url_for(page.prev_link) %>">← <%= __('prev') %></a>
+    <% } else { %>
+    <span class="prev disabled">← <%= __('prev') %></span>
+    <% } %>
+
+    <span class="page-number"><%= page.current %> / <%= page.total %></span>
+
+    <% if (page.next) { %>
+    <a class="next" href="<%- url_for(page.next_link) %>"><%= __('next') %> →</a>
+    <% } else { %>
+    <span class="next disabled"><%= __('next') %> →</span>
+    <% } %>
+  </div>
+</nav>
+<% } %>

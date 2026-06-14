@@ -1,0 +1,13 @@
+<%
+var tocContent = toc(page.content, { max_depth: theme.toc.max_depth || 3 });
+var hasToc = tocContent && tocContent.trim().length > 0;
+%>
+
+<% if (hasToc) { %>
+<aside class="sidebar">
+  <nav class="sidebar-toc">
+    <div class="sidebar-toc-title"><%= __('toc') %></div>
+    <%- tocContent %>
+  </nav>
+</aside>
+<% } %>

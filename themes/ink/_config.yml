@@ -1,0 +1,33 @@
+# ===============
+# Ink Theme Config
+# ===============
+
+# Site navigation menu
+menu:
+  首页: /
+  归档: /archives
+  分类: /categories
+  标签: /tags
+
+# RSS link (optional, leave empty to disable)
+rss:
+
+# Footer copyright (supports HTML)
+copyright: '&copy; <span id="copyright-year"></span> <a href="/">欢蹦乱跳少年游</a>'
+
+# Home page: number of posts per page
+per_page: 10
+
+# Table of contents
+toc:
+  enable: true
+  # max depth of headings to show in TOC
+  max_depth: 3
+
+# Code highlighting (uses Hexo's built-in highlight.js)
+highlight:
+  enable: true
+  theme: github-dark  # github | monokai | atom-one-dark | atom-one-light
+
+# External links open in new tab
+external_link: true

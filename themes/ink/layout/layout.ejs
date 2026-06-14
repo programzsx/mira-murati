@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="<%= config.language %>">
+<%- partial('_partial/head') %>
+<body>
+  <div class="site">
+    <%- partial('_partial/header') %>
+    <div class="content-wrapper">
+      <%- partial('_partial/sidebar') %>
+      <main class="main">
+        <%- body %>
+      </main>
+    </div>
+    <%- partial('_partial/footer') %>
+  </div>
+  <%- js('js/main') %>
+</body>
+</html>
