@@ -10,7 +10,7 @@ menu:
   标签: /tags
 
 # RSS link (optional, leave empty to disable)
-rss:
+rss: /atom.xml
 
 # Footer copyright (supports HTML)
 copyright: '&copy; <span id="copyright-year"></span> <a href="/">欢蹦乱跳少年游</a>'

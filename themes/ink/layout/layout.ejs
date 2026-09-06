@@ -11,7 +11,12 @@ var hasSiteGate = sitePassword.length > 0;
 <%- partial('_partial/head') %>
 <body>
   <div class="reading-progress" id="reading-progress"></div>
-  <div class="site" id="post-body-protected" style="<%= hasSiteGate ? 'display:none;' : '' %>">
+  <%
+  // 404 page bypasses the password gate so the not-found page is itself reachable
+  var isNotFound = (page && page.path === '404.html');
+  var effectiveGate = hasSiteGate && !isNotFound;
+  %>
+  <div class="site" id="post-body-protected" style="<%= effectiveGate ? 'display:none;' : '' %>">
     <%- partial('_partial/header') %>
     <%
     // Only post detail pages have a sidebar (TOC). All other pages
@@ -26,7 +31,7 @@ var hasSiteGate = sitePassword.length > 0;
     </div>
     <%- partial('_partial/footer') %>
   </div>
-  <% if (hasSiteGate) { %>
+  <% if (effectiveGate) { %>
   <div class="password-gate password-gate--site" id="password-gate">
     <div class="password-gate-inner">
       <div class="password-gate-icon">🔒</div>

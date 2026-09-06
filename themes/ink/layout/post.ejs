@@ -1,14 +1,77 @@
+<%
+// ── Related posts: pick up to 4 posts that share the most tags with this one ──
+var related = [];
+if (page.tags && page.tags.length > 0) {
+  var currentTagNames = page.tags.map(function (t) { return t.name; });
+  site.posts.forEach(function (p) {
+    if (p._id === page._id) return;
+    if (!p.tags) return;
+    var overlap = 0;
+    p.tags.forEach(function (t) {
+      if (currentTagNames.indexOf(t.name) !== -1) overlap++;
+    });
+    if (overlap > 0) related.push({ post: p, score: overlap });
+  });
+  related.sort(function (a, b) { return b.score - a.score; });
+  related = related.slice(0, 4);
+}
+%>
+
+<%
+// ── Breadcrumbs ──
+var crumbs = [{ name: '首页', url: '/' }];
+if (page.categories && page.categories.length > 0) {
+  page.categories.forEach(function (cat) {
+    crumbs.push({ name: cat.name, url: url_for(cat.path) });
+  });
+}
+crumbs.push({ name: page.title, url: false });
+%>
+
+<nav class="breadcrumbs" aria-label="面包屑">
+  <% crumbs.forEach(function (c, i) { %>
+    <% if (c.url) { %>
+      <a href="<%- c.url %>"><%= c.name %></a>
+    <% } else { %>
+      <span aria-current="page"><%= c.name %></span>
+    <% } %>
+    <% if (i < crumbs.length - 1) { %><span class="breadcrumbs-sep" aria-hidden="true">/</span><% } %>
+  <% }) %>
+</nav>
+
 <div class="post-card">
   <%- partial('_partial/article', { post: page, index: false }) %>
 
   <% if (page.prev || page.next) { %>
-  <nav class="post-nav">
+  <nav class="post-nav" aria-label="文章导航">
     <% if (page.prev) { %>
-    <a class="prev" href="<%- url_for(page.prev.path) %>" title="<%= page.prev.title %>">← <%= page.prev.title %></a>
-    <% } %>
+    <a class="prev" href="<%- url_for(page.prev.path) %>">
+      <span class="label">← 上一篇</span>
+      <span class="title"><%= page.prev.title %></span>
+    </a>
+    <% } else { %><span></span><% } %>
     <% if (page.next) { %>
-    <a class="next" href="<%- url_for(page.next.path) %>" title="<%= page.next.title %>"><%= page.next.title %> →</a>
-    <% } %>
+    <a class="next" href="<%- url_for(page.next.path) %>">
+      <span class="label">下一篇 →</span>
+      <span class="title"><%= page.next.title %></span>
+    </a>
+    <% } else { %><span></span><% } %>
   </nav>
+  <% } %>
+
+  <% if (related.length > 0) { %>
+  <section class="related" aria-labelledby="related-heading">
+    <h2 class="related-heading" id="related-heading">相关文章</h2>
+    <ul class="related-list">
+      <% related.forEach(function (r) { %>
+      <li class="related-item">
+        <a href="<%- url_for(r.post.path) %>">
+          <h3 class="related-title"><%= r.post.title %></h3>
+          <span class="related-meta"><%= date(r.post.date, 'YYYY-MM-DD') %></span>
+        </a>
+      </li>
+      <% }) %>
+    </ul>
+  </section>
   <% } %>
 </div>

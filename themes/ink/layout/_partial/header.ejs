@@ -11,6 +11,9 @@
         <% } %>
       </ul>
       <% } %>
+      <% if (theme.rss) { %>
+      <a class="rss-link" href="<%= theme.rss %>" target="_blank" rel="noopener" aria-label="RSS 订阅" title="RSS 订阅">RSS</a>
+      <% } %>
       <button class="theme-toggle" id="theme-toggle" type="button" aria-label="切换主题" title="切换主题">
         <span class="icon-moon" aria-hidden="true">🌙</span>
         <span class="icon-sun" aria-hidden="true">☀️</span>
