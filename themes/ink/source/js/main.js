@@ -147,6 +147,63 @@
     updateProgress();
   }
 
+  /* ---------- Taxonomy tree: expand/collapse + check toggle ---------- */
+  var taxTree = document.querySelector('.tax-tree');
+  if (taxTree) {
+    // Toggle (arrow) button: expand/collapse
+    taxTree.addEventListener('click', function (e) {
+      var toggle = e.target.closest('.tax-toggle');
+      if (toggle) {
+        var node = toggle.closest('.tax-node');
+        if (!node) return;
+        var expanded = node.getAttribute('aria-expanded') === 'true';
+        node.setAttribute('aria-expanded', expanded ? 'false' : 'true');
+        return;
+      }
+      // Checkbox circle: toggle checked state
+      var check = e.target.closest('.tax-check');
+      if (check) {
+        var node2 = check.closest('.tax-node');
+        if (!node2) return;
+        var checked = check.getAttribute('aria-checked') === 'true';
+        check.setAttribute('aria-checked', checked ? 'false' : 'true');
+        node2.classList.toggle('is-selected', !checked);
+        return;
+      }
+      // Row click (anywhere except toggle / check / name link): select
+      var row = e.target.closest('.tax-node-row');
+      if (row) {
+        // If the click landed on the name link, let it navigate
+        if (e.target.closest('.tax-name')) return;
+        var node3 = row.closest('.tax-node');
+        if (!node3) return;
+        var c = node3.querySelector('.tax-check');
+        if (c) {
+          var now = c.getAttribute('aria-checked') === 'true';
+          c.setAttribute('aria-checked', now ? 'false' : 'true');
+          node3.classList.toggle('is-selected', !now);
+        }
+      }
+    });
+    // Keyboard: left/right arrows expand/collapse
+    taxTree.addEventListener('keydown', function (e) {
+      if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
+      var btn = e.target.closest('.tax-toggle');
+      if (!btn) return;
+      var node = btn.closest('.tax-node');
+      if (!node) return;
+      var hasChildren = node.classList.contains('tax-node--has-children');
+      if (!hasChildren) return;
+      e.preventDefault();
+      var expanded = node.getAttribute('aria-expanded') === 'true';
+      if (e.key === 'ArrowRight' && !expanded) {
+        node.setAttribute('aria-expanded', 'true');
+      } else if (e.key === 'ArrowLeft' && expanded) {
+        node.setAttribute('aria-expanded', 'false');
+      }
+    });
+  }
+
   /* ---------- Reveal on scroll (IntersectionObserver) ---------- */
   if ('IntersectionObserver' in window) {
     var revealIO = new IntersectionObserver(function (entries) {

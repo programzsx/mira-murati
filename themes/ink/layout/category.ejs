@@ -25,54 +25,78 @@
   <p class="page-hero-meta"><%= site.categories.length %> <%= __('categories') %></p>
 </section>
 
-  <%
-  // Build category tree: top-level vs children by parent _id
-  var allCats = [];
-  site.categories.each(function(c) { allCats.push(c); });
-  
-  var topCats = [];
-  var childMap = {};
-  
-  allCats.forEach(function(cat) {
-    if (!cat.parent) {
-      topCats.push(cat);
-    } else {
-      var pid = cat.parent;
-      if (!childMap[pid]) childMap[pid] = [];
-      childMap[pid].push(cat);
-    }
-  });
-  
-  // Recursive helper to render a category and its subtree
-  function renderCat(cat, depth) {
-    var html = '<li class="taxonomy-item">';
-    html += '<a class="taxonomy-link" href="' + url_for(cat.path) + '">';
-    html += '<span class="taxonomy-name">' + cat.name + '</span>';
-    html += '<span class="taxonomy-count">' + cat.posts.length + '</span>';
-    html += '</a>';
-    
-    var children = childMap[cat._id] || [];
-    if (children.length > 0) {
-      html += '<ul class="taxonomy-sub">';
-      children.forEach(function(sub) {
-        html += renderCat(sub, depth + 1);
-      });
-      html += '</ul>';
-    }
-    
-    html += '</li>';
-    return html;
-  }
-  %>
+<%
+// Build category tree: top-level vs children by parent _id
+var allCats = [];
+site.categories.each(function(c) { allCats.push(c); });
 
-  <% if (topCats.length > 0) { %>
-  <ul class="taxonomy-list">
-    <% topCats.forEach(function(cat) { %>
-    <%- renderCat(cat, 0) %>
+var topCats = [];
+var childMap = {};
+
+allCats.forEach(function(cat) {
+  if (!cat.parent) {
+    topCats.push(cat);
+  } else {
+    var pid = cat.parent;
+    if (!childMap[pid]) childMap[pid] = [];
+    childMap[pid].push(cat);
+  }
+});
+
+// Render a single tree node (no card, plain horizontal row, with guide lines via CSS).
+// `childIdx` and `siblingCount` power guide-line visibility (last child = half-line only).
+function escapeHtml(s) { return String(s).replace(/[&<>"']/g, function (c) { return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]; }); }
+
+function renderNode(cat, depth, isLast) {
+  var hasChildren = (childMap[cat._id] || []).length > 0;
+  var itemClass = 'tax-node' + (hasChildren ? ' tax-node--has-children' : '');
+  var rowClass = 'tax-node-row';
+  var html = '<li class="' + itemClass + '" role="treeitem" aria-expanded="' + (hasChildren ? 'true' : 'false') + '" data-depth="' + depth + '" data-last="' + (isLast ? '1' : '0') + '">';
+  html += '<div class="' + rowClass + '">';
+  // Toggle: arrow button (right when collapsed, down when expanded). Always reserve the slot for alignment.
+  if (hasChildren) {
+    html += '<button class="tax-toggle" type="button" aria-label="折叠 ' + escapeHtml(cat.name) + '"><svg viewBox="0 0 12 12" width="10" height="10" aria-hidden="true"><path d="M3 2 L9 6 L3 10" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></button>';
+  } else {
+    html += '<span class="tax-toggle tax-toggle--spacer" aria-hidden="true"></span>';
+  }
+  // Icon: folder for parent, document for leaf
+  html += '<span class="tax-icon ' + (hasChildren ? 'tax-icon--folder' : 'tax-icon--doc') + '" aria-hidden="true">';
+  html += hasChildren
+    ? '<svg viewBox="0 0 16 16" width="14" height="14"><path d="M2 4 a1 1 0 0 1 1-1 h3.5 l1.2 1.4 H13 a1 1 0 0 1 1 1 v6.6 a1 1 0 0 1 -1 1 H3 a1 1 0 0 1 -1 -1 z" fill="currentColor" opacity="0.18"/><path d="M2 4 a1 1 0 0 1 1-1 h3.5 l1.2 1.4 H13 a1 1 0 0 1 1 1 v6.6 a1 1 0 0 1 -1 1 H3 a1 1 0 0 1 -1 -1 z" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/></svg>'
+    : '<svg viewBox="0 0 16 16" width="14" height="14"><path d="M4 2 h6 l2 2 v9 a1 1 0 0 1 -1 1 H4 a1 1 0 0 1 -1 -1 V3 a1 1 0 0 1 1 -1 z" fill="currentColor" opacity="0.18"/><path d="M4 2 h6 l2 2 v9 a1 1 0 0 1 -1 1 H4 a1 1 0 0 1 -1 -1 V3 a1 1 0 0 1 1 -1 z M10 2 v2 h2" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/></svg>';
+  html += '</span>';
+  // Name + count
+  html += '<a class="tax-name" href="' + url_for(cat.path) + '">' + escapeHtml(cat.name) + '</a>';
+  html += '<span class="tax-count">（' + cat.posts.length + '题）</span>';
+  // Checkbox: empty circle for unselected, filled for selected
+  html += '<button class="tax-check" type="button" role="checkbox" aria-checked="false" aria-label="选择 ' + escapeHtml(cat.name) + '"></button>';
+  html += '</div>';
+
+  // Children
+  if (hasChildren) {
+    var kids = childMap[cat._id];
+    html += '<ul class="tax-tree-list tax-children" role="group">';
+    kids.forEach(function (sub, idx) {
+      var lastKid = idx === kids.length - 1;
+      html += renderNode(sub, depth + 1, lastKid);
+    });
+    html += '</ul>';
+  }
+
+  html += '</li>';
+  return html;
+}
+%>
+
+<% if (topCats.length > 0) { %>
+<div class="tax-tree" role="tree" aria-label="<%= __('categories') %>">
+  <ul class="tax-tree-list tax-tree-list--root" role="group">
+    <% topCats.forEach(function (cat, idx) { %>
+      <%- renderNode(cat, 0, idx === topCats.length - 1) %>
     <% }) %>
   </ul>
-  <% } else { %>
-  <p class="empty"><%= __('no_categories') %></p>
-  <% } %>
 </div>
+<% } else { %>
+<p class="empty"><%= __('no_categories') %></p>
+<% } %>
 <% } %>

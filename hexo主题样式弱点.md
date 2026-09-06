@@ -1,303 +1,367 @@
-# 一、当前主题样式还能改进的地方
+# 一、当前主题样式在行业最佳实践标准下的薄弱之处
 
-本份文档用于梳理 `themes/ink` 主题在赛博朋克编辑型改造之后，仍然存在但需要后续补齐的样式弱点。本份文档不是问题清单的展览。本份文档是为了给下一轮改造提供"该补什么、按什么优先级补"的方向。
+本份文档用于以"行业最佳实践"为基准，重新评估 `themes/ink` 主题在赛博朋克编辑型改造之后仍然存在的弱点。本份文档不是上一份细节清单的复述。本份文档是从"行业做法"反向对比后的判断。
 
-本份文档按"为什么弱、弱在哪、怎么改"展开。本份文档不复制 CSS 代码。本份文档只描述 CSS 之外需要新做的事。
+本份文档按"行业标准在讲什么、当前实现差在哪、要补到什么程度"展开。本份文档不复制代码。本份文档只描述改造方向。
 
-## （一）可访问性细节不到位
+## （一）字体加载与中文排版精细化
 
-当前样式在视觉冲击力上做到了位。本份文档要指出的是视觉冲击力之外、a11y 这一层还很薄。
+字体层面是这次改造里最"看起来贵"的部分。字体层面也是这次改造里离行业最佳实践距离最远的部分。
 
-### 1、键盘 focus 状态偏弱
+### 1、字体加载仍未自托管
 
-链接的 focus 环只有一圈 2px 的电光蓝。`input`、`button` 的 focus 状态没有统一的视觉规范。这层弱在"屏幕阅读器用户能跳转但看不到清晰焦点"。
+Google Fonts 当前是远程加载。这一项在行业标准里属于"隐私债务"。这一项弱在用户访问时浏览器要连接 Google 服务器。这一项弱在欧盟 GDPR 把这种行为划入"数据出境"。
 
-需要补的是给所有交互元素加 `--focus-ring` 变量。需要补的是把 focus 环和 hover 状态区分开。需要补的是 focus 环在暗背景上的对比度至少达到 3:1。
+需要补的是把 Inter、JetBrains Mono、Noto Serif SC、Noto Sans SC 四个字体族下载到 `source/fonts/` 自托管。需要补的是用 Fontsource 或手动下载 woff2。
 
-### 2、颜色对比度部分低于 WCAG AA
+### 2、字体子集没有真做
 
-正文 `#e6e6f0` 在 `#0a0a0f` 背景上对比度足够。次要文字 `#8a8aa0` 在 `#0a0a0f` 上对比度约 5.7:1。这一项达标。
+Google Fonts 链接里没加 `subset=chinese-simplified`。这一项弱在中文字体体积接近 5MB。这一项弱在每次访问下载全字集。
 
-`#555568` 这一档的 `--fg-faint` 在背景上的对比度约 2.4:1。这一项低于 AA 标准。这一项弱在 TOC 编号、引用来源、极小元信息用了这档颜色。
+需要补的是把 woff2 子集化到只保留实际用到的字符。需要补的是构建期扫 source/_posts 提取用到的汉字。需要补的是输出 subset 字体文件。
 
-需要补的是把 `--fg-faint` 提到至少 `#6b6b80` 这一档。需要补的是极小元信息也走次要文字一档。
+### 3、缺 size-adjust fallback metric
 
-### 3、aria 标签缺失
+字体 fallback 期间的 FOIT 仍然存在。这一项弱在 Noto Serif SC 加载完之前 Hero 渐变标题会有"塌陷 → 弹回"的跳动。
 
-密码门是全屏覆盖层。这一层弱在缺少 `role="dialog"`、`aria-modal="true"`、`aria-labelledby`。这一层弱在屏幕阅读器读不到"输入密码"和"密码错误"的语义。
+需要补的是为每个 webfont 写一份 fallback metric override。需要补的是用 `size-adjust`、`ascent-override`、`descent-override` 让 fallback 字体度量尽量接近 webfont。
 
-需要补的是密码门加 aria 属性。需要补的是装饰性的 emoji（`🔒`）加 `aria-hidden="true"`。
+### 4、中文排版细节缺失
 
-## （二）响应式断点过渡不够细腻
+中文排版行业标准包含几项 hexo 默认渲染未做的事。这一项弱在"中文博客像未排版的草稿"。
 
-断点只有 1024、720、480 三个。断点之间的过渡没有用 `clamp()` 平滑。断点跳变会让中等屏幕（768到1024）出现突然的版式切换。
+第一项缺失是首行缩进。中文段落传统是首行缩进 2em。当前所有段落都是顶格写。
+
+第二项缺失是中文标点挤压。中文引号、书名号、破折号都应该用全角。当前 hexo 渲染的引号是英文直引号 `"`，不是中文弯引号 `""`。
+
+第三项缺失是汉字与西文之间的间距。当前中文与英文之间是无空格。这项在中英文混排时反而显得拥挤。
+
+需要补的是写一个 marked 渲染后处理脚本，处理这三类中文排版细节。需要补的是不依赖 typographic.js 这种老库。
+
+### 5、等宽数字未启用
+
+代码块之外的数字（如日期、阅读时间）当前用比例字体。这一项弱在"234 阅读时间"会跳动。这一项弱在数字不在固定宽度上对齐。
+
+需要补的是给数字使用 `font-variant-numeric: tabular-nums`。需要补的是 hero stats 等位置用这个特性。
+
+## （二）配色系统的工程化程度
+
+当前配色用 hex 值。这一项离行业标准差一截。行业标准已经全面转向 oklch 色彩空间。
+
+### 1、色彩空间仍用 sRGB hex
+
+`#00d4ff`、`#ff0080`、`#00ff88` 三个强调色当前用 hex。这一项弱在色彩调整不直观。这一项弱在做"暗色降饱和 20%"这种调整时要重算。
+
+需要补的是把三色改用 `oklch()` 函数表达。需要补的是用 `color-mix(in oklch, ...)` 做派生色。
+
+### 2、暗色单一、缺中间档
+
+行业标准的色彩系统提供"surface 1 / surface 2 / surface 3 / surface 4"四到五档。当前只有 bg / bg-elevated / bg-card 三档。
+
+需要补的是增加 surface 3、surface 4 两档。需要补的是 modal、popover、tooltip 等悬浮层用 surface 3，tag 标签用 surface 4。
+
+### 3、缺色彩对比度自动化测试
+
+当前对照度是手工算的。这一项弱在未来加新色时容易回归到 AA 边缘。
+
+需要补的是加一个 CI 步骤跑 Pa11y 或 axe-core 检测每组前景/背景对比度。需要补的是 CI 失败时阻塞 merge。
+
+### 4、缺色盲模拟
+
+三色渐变（蓝/粉/绿）对色盲用户可能不友好。这一项弱在红绿色盲看不出蓝粉区分。
+
+需要补的是关键信息（链接、错误状态、成功状态）不仅靠颜色区分。需要补的是用图标 + 文字辅助（已经部分做了，但还能加强）。
+
+## （三）排版节奏与流体布局
+
+当前排版有节奏感。这一项离行业最佳实践还差一档。
+
+### 1、缺流体字号系统
+
+当前字号虽然用了 `clamp()`，但各档之间的"视觉步进"没有经过计算。这一项弱在标题与正文之间"跳"得不自然。
+
+需要补的是用 modular scale（1.2 或 1.25 的比率）反推各档字号。需要补的是用 `clamp()` 让每档字号随视口平滑变化。
+
+### 2、阅读行宽仍偏窄
+
+`--reading-max: 880px` 在 17px 字号下每行约 50 中文字。行业最佳实践是 45-75 字符。当前刚好踩下限。
+
+需要补的是把阅读宽度调到 920-960px。需要补的是 hero 标题、article h1 不受 reading-max 限制，可以更宽。
+
+### 3、缺中英文不同行高
+
+正文行高 `1.85` 对中文友好，对英文偏松。这一项弱在英文段落视觉上"散"。
+
+需要补的是用 `:lang(zh)` 和 `:lang(en)` 分别给行高。需要补的是中英文段落视觉节奏更紧凑。
+
+## （四）微交互的精度
+
+当前交互有 hover、active。这一项离 Linear、Raycast 这种"每个动作都有反馈"的产品还有差距。
+
+### 1、缺按钮 hover preview
+
+当前按钮 hover 只是变色。这一项弱在没有"先预览后点击"的反馈。
+
+需要补的是 tooltip 显示按钮功能说明（部分加了 aria-label 但缺视觉提示）。需要补的是 destructive 按钮 hover 时显示警告色。
+
+### 2、缺加载状态
+
+当前没有 skeleton、spinner、progress 指示。这一项弱在 hexo 静态站其实也有"页面切换"的瞬时空白（虽然快）。
+
+需要补的是给图片加 `aspect-ratio` 固定容器，加载前灰色块。需要补的是给字体加载过程加 loading indicator。
+
+### 3、缺状态机管理
+
+按钮有 normal、hover、active、focus、disabled 五个状态。当前只用了三个。
+
+需要补的是补全 disabled 状态样式。需要补的是补全 loading 状态（按钮变成 spinner + 禁用点击）。
+
+### 4、缺 prefers-reduced-data
+
+行业标准增加 `prefers-reduced-data: reduce` 媒体查询。这一项弱在慢网络下仍下载全字体全图。
+
+需要补的是检测到 reduced data 时切换到纯文字版（无图片无 webfont）。需要补的是为文本优先模式做专门样式。
+
+## （五）键盘与屏幕阅读器可访问性
+
+a11y 第一轮补了 focus、aria。这一项还有几档没做。
+
+### 1、缺 skip to content 链接
+
+行业标准在 body 第一个元素放一个 visually-hidden 但 focusable 的"跳到正文"链接。这一项弱在键盘用户要 Tab 多次才能跳过 header。
+
+需要补的是在 `<body>` 第一个位置放 `.skip-link`。需要补的是默认 `position: absolute; left: -9999px;`，focus 时 `left: 1rem; top: 1rem;`。
+
+### 2、缺 focus trap
+
+密码门、lightbox 是模态组件。行业标准要求模态打开时 focus 不能跑出去。
+
+需要补的是打开模态时记录当前 focus 元素。需要补的是把 focus 移到模态内第一个可交互元素。需要补的是 Esc 关闭模态 + focus 回到触发元素。
+
+### 3、缺 ARIA live 区域
+
+页面动态更新（密码错误、文章加载更多）当前没有宣告给屏幕阅读器。
+
+需要补的是密码错误已经有 `role="alert"`。需要补的是搜索结果、分页变化、theme 切换都加 `aria-live` 区域。
+
+### 4、颜色对比度仍有边缘案例
+
+`--color-fg-faint` 当前是 `#6b6b80`。在 `#0a0a0f` 背景上对比度约 4.7:1。刚好踩 AA 边缘。
+
+需要补的是把它提到 `#7e7e94`（约 5.5:1）。需要补的是 hero stat 中的次要文字也用同档。
+
+## （六）图像与媒体处理的深度
+
+lightbox 加了。这一项还差几个深度项。
+
+### 1、缺 blurhash 或低质量预览图
+
+当前图片加载是直接出图。这一项弱在慢网络下图片加载慢导致 CLS（布局偏移）。
+
+需要补的是给每张图生成 blurhash 字符串嵌入 `data:image/svg+xml,...` 占位。需要补的是用 `aspect-ratio` 固定容器防 CLS。
+
+### 2、缺响应式 art direction
+
+当前图片只有 `<img>`。这一项弱在手机上看宽图被压扁。
+
+需要补的是用 `<picture>` + `<source media="..." srcset="...">`。需要补的是小屏用裁剪版、大屏用全版。
+
+### 3、缺图片懒加载的预连接
+
+`loading="lazy"` 加了。这一项弱在第一屏图片的 LCP 仍可能慢。
+
+需要补的是给 hero 第一张图加 `loading="eager"` + `fetchpriority="high"`。需要补的是预加载 LCP 图片。
+
+### 4、缺视频和 iframe 处理
+
+文章里如果嵌入 YouTube、Bilibili、video 元素。当前没有特殊处理。
+
+需要补的是 iframe 加 `loading="lazy"`。需要补的是 video 加 `preload="none"` + 显式播放按钮。
+
+## （七）内容运营能力
+
+站点目前是"展示型"。这一项还差"互动型"的几档。
+
+### 1、缺站内搜索
+
+站内搜索是 hexo 主题标配。`hexo-generator-search` 没装。
+
+需要补的是装 `hexo-generator-search` 或自写 fuse.js 索引。需要补的是 header 加搜索图标 + 弹出搜索面板 + `/` 快捷键。
+
+### 2、缺邮件订阅
+
+hexo 主题常见做法是 Mailchimp/Buttondown 嵌入。
+
+需要补的是选一个邮件服务（推荐 Buttondown，简洁）。需要补的是 footer 加订阅输入框。
+
+### 3、缺分享按钮
+
+文章底部没有分享。这一项弱在 Twitter、微博、复制链接。
+
+需要补的是自写一个分享组件（避免第三方 SDK 引入追踪）。需要补的是复制链接 + Twitter + 微博 + 豆瓣。
+
+### 4、缺评论系统
+
+如果用户希望有读者互动。
+
+需要补的是 Giscus（基于 GitHub Discussions，零追踪）。需要补的是 Artalk（自托管）。需要补的是 Twikoo（云函数）。
+
+### 5、缺点赞/收藏
+
+如果用户希望轻互动。
+
+需要补的是 Twikoo 的 like 功能。需要补的是自写一个本地 localStorage 计数（无需后端）。
+
+## （八）响应式断点的精细度
+
+三个断点（1100/720/480）太粗。行业标准是 container queries 加 4-6 档断点。
 
 ### 1、断点跳变
 
-桌面端 `1fr` 单列、1200px 容器。平板端到了1024直接塌成单列、没有过渡区间。手机端到了720字号从 17px 跳到 16px、行高没过渡。
+小屏塌成单列是突变。这一项弱在 1100px → 1099px 突然从两列变单列。
 
-需要补的是把字号、行高、间距统一用 `clamp()` 写。需要补的是断点变成"建议值"而不是"硬切换"。
+需要补的是用 CSS 容器查询。需要补的是 sidebar 宽度用 `clamp(220px, 18vw, 300px)` 让 sidebar 视口宽度平滑变化。
 
-### 2、触摸目标过小
+### 2、缺横屏手机专项样式
 
-移动端导航链接 padding `8px 0`。这一项弱在 44px 最小触摸目标没达到。需要补的是 nav 链接加到 44px 高度。
+横屏手机（高度 < 500px）的 hero 适配加了一行。这一项弱在横屏时的密码门没专项处理。
 
-分页按钮 mobile 端 `padding: 8px 16px`。这一项弱在高度不到 44px。需要补的是把分页按钮高度统一拉到 44px。
+需要补的是横屏时密码门遮罩改为左右分栏——左侧放 icon + 标题，右侧放输入框。需要补的是横屏时 hero 上下 padding 减半。
 
-### 3、横屏适配缺失
+### 3、缺可打印样式
 
-手机横屏时（高度小于 500px）密码门全屏遮罩会显得过大。这一项弱在没有专门的横屏样式。需要补的是横屏时把 hero 上下 padding 缩小。
+print 样式补了基本项。这一项弱在边距、字体没按打印标准。
 
-## （三）字体加载策略有改进空间
+需要补的是 `@page` 设 A4 边距 2cm。需要补的是打印字号统一 11pt。需要补的是链接加 URL 后缀。
 
-字体是当前样式最贵的部分。字体加载策略弱在"用 swap 之后会闪一下"。
+## （九）动效系统化与页面切换
 
-### 1、没有 font preload
+当前动画是"零散"地加的。这一项还差"系统化"。
 
-`<link rel="preload">` 没加。需要补的是把 Inter Regular 和 Noto Serif SC Bold 加进 preload。需要补的是减少首屏 FOIT 时间。
+### 1、缺 page transition
 
-### 2、字体子集没做
+hexo 主题的现代做法是加上 PJAX 或 instant.page。这一项弱在页面切换瞬时白屏。
 
-Google Fonts 加载的是完整字集。中文 Noto Serif SC 完整字集接近 5MB。这一项弱在每次访问都下载全字集。需要补的是用 `&subset=chinese-simplified` 切到简中字集。需要补的是中文字体考虑改用国内 CDN（字体酷、字魂）。
+需要补的是用 `view-transition-name` API（Chromium 111+）。需要补的是 polyfill 老浏览器（用 setTimeout fade-out）。
 
-### 3、font-display 没显式指定
+### 2、缺 stagger 列表入场
 
-Google Fonts 默认 `swap`。这一项默认 OK。但 hero 标题用 Noto Serif SC 时，标题加载完之前会先用 fallback。这一项弱在"渐变文字"在 fallback 期间会变形。
+文章卡片当前用 `.reveal.in` 单独淡入。这一项弱在列表项同时出现，没有"逐个出现"的节奏。
 
-需要补的是在 `@font-face` 里显式写 `font-display: swap` 并配上合适的 fallback metric（`size-adjust`、`ascent-override`）。
+需要补的是用 IntersectionObserver 给每张卡片加 `transition-delay: calc(var(--i) * 60ms)`。需要补的是 stagger 上限 5 项（再多就看不出节奏）。
 
-## （四）可读性细节可再精雕
+### 3、缺 scroll-driven 动画
 
-当前排版骨架搭起来了。但读长文时仍有些细节会让眼睛累。
+滚动进度除了顶部 2px 进度条，没别的。这一项弱在文章里元素不跟随滚动做入场。
 
-### 1、长段落没有最大行宽
+需要补的是用 `animation-timeline: view()` 让元素进入视口时滑入。需要补的是 hero 标题随滚动微微 scale down。
 
-文章正文有 `max-width: 720px`。这一项达标。但 hero 副标题、卡片摘要、卡片 footer 没有 max-width，会随容器拉伸。
+### 4、缺 FLIP 动画
 
-需要补的是 `entry-content` 卡片摘要加 `max-width: 70ch`。需要补的是 hero subtitle 加 `max-width`（已有 640px，可保留）。
+链接 hover、卡片 hover 没有流畅过渡。这一项弱在 hover 状态切换是"瞬时"的。
 
-### 2、链接在卡片中的样式
+需要补的是用 FLIP 思路记录位置、从旧位置 transform 到新位置。需要补的是 at-rule `@starting-style` 实现 entry animation。
 
-卡片 `entry-title` 的链接 hover 变青。这一项弱在用户看摘要时看不清"哪些文字是链接"。需要补的是把摘要里的内联链接加下划线。
+## （十）前端架构的可维护性
 
-### 3、行内代码的对比度
+CSS 1300+ 行单文件。JS 240+ 行 IIFE。这一项离"现代前端架构"很远。
 
-`code` 标签背景是 `#13131c`，文字是 `#00ff88`。这一项弱在中文文本里的英文代码段会显得突兀。需要补的是考虑给行内代码加 padding-y=1px 圆角 3px 让它更内敛。
+### 1、缺设计 token 文档
 
-### 4、引用块（blockquote）样式偏单调
+变量都在 `:root` 里但没有文档说明。这一项弱在新人接手不知道变量命名约定。
 
-引用块有渐变左边框。但引用块内部如果再嵌套一个 blockquote 就会样式丢失。这一项弱在没有嵌套规则。需要补的是加 `blockquote blockquote` 缩进和颜色变浅。
+需要补的是写一个 `docs/design-tokens.md`，列每个 token 的"用途 / 默认值 / 用在哪"。需要补的是用 Style Dictionary 工具生成。
 
-## （五）只支持暗色模式
+### 2、缺组件化
 
-当前 CSS 锁死暗色。这对一个"自用 1-5 人"博客没大问题。但**未来如果想给人看**、**如果在白天看**、**如果想打印**，这一项都是障碍。
+当前没有"卡片"作为组件。这项弱在 `<article class="post-card">` 在多处复制样式。
 
-### 1、没有 light mode 切换
+需要补的是抽出 `.post-card` 到独立 partial。需要补的是 JS 组件化（如果引入 Web Components）。
 
-没有 `prefers-color-scheme` 媒体查询。没有切换按钮。这一项弱在白天读长文眼睛会累。
+### 3、缺类型系统
 
-需要补的是把硬编码颜色都改成 CSS 变量。需要补的是加 `@media (prefers-color-scheme: light)` 覆盖变量。需要补的是加右上角"日/月"切换按钮。
+JS 是 plain JS。这一项弱在 main.js 改个函数不知道哪里会爆。
 
-### 2、用户偏好记忆
+需要补的是迁移到 TypeScript 或至少加 JSDoc 注释。需要补的是 hexo 生态支持 .ts 文件需要构建步骤。
 
-即使加了切换，没有 `localStorage` 记忆用户选择。这一项弱在每次刷新都得切。需要补的是切完后写 localStorage。需要补的是读 localStorage 设初始主题。
+### 4、缺构建工具
 
-## （六）交互反馈不够细腻
+CSS / JS 直接发布到 public。这一项弱在不能 minify、不能 tree-shake。
 
-当前样式偏"静态展示"。这一项弱在"按下去没反馈、加载中没提示"。
+需要补的是加 esbuild 或 lightningcss 做构建步骤。需要补的是 hexo 配合 `@11ty/eleventy-img` 风格的多步构建。
 
-### 1、按钮 active 状态
+## （十一）性能与首屏体验
 
-密码门"确认"按钮有 hover。但 active（按下时）没视觉变化。这一项弱在按下去感觉"没反应"。
+Lighthouse 分数估计 70-80。这一项离 90+ 行业标准还有距离。
 
-需要补的是加 `:active { transform: scale(0.97); }`。
+### 1、缺 CLS 控制
 
-### 2、链接点击中状态
+图片、字体都没预留空间。这一项弱在加载时内容跳动。
 
-链接点击瞬间没有视觉反馈。需要补的是加 `:active { opacity: 0.6; }`。
+需要补的是图片用 `aspect-ratio`。需要补的是 hero 高度用 `min-height: 80vh` 留位。
 
-### 3、加载状态
+### 2、缺 prefetch
 
-没有 skeleton 屏、没有 spinner、没有"加载中"占位。需要补的是 hexo 静态站其实没"加载"概念。但图片懒加载的占位可以加。
+hexo 默认没有下一页预取。这一项弱在用户点下一篇时延迟明显。
 
-## （七）图像与媒体处理缺失
+需要补的是用 `<link rel="prefetch">` 预取首页前 5 篇文章。需要补的是用 quicklink.js 在 viewport 视图中动态 prefetch。
 
-hexo 文章里如果有图（你的博客有"绘画-维基百科"等图集类文章），目前样式几乎没做。
+### 3、缺 Service Worker
 
-### 1、没有图片懒加载
+博客是文档型，特别适合 PWA。这一项弱在没有离线访问。
 
-`hexo-renderer-marked` 渲染的图片没加 `loading="lazy"`。这一项弱在长文里首屏之外的图会拖慢首屏。
+需要补的是加 `manifest.json` + Service Worker。需要补的是离线时显示缓存版本而不是 network error。
 
-需要补的是在 marked 渲染后注入 `loading="lazy"`。需要补的是加 `decoding="async"`。
+### 4、缺图片 CDN
 
-### 2、没有 lightbox
+GitHub Pages 直接提供图片，没有 CDN 加速。这一项弱在中国访问慢。
 
-文章里的图点击没反应。需要补的是引入 medium-zoom 或 photoswipe。需要补的是用国产替代（lightbox2太老）。
+需要补的是用 jsDelivr 或 CF Workers 做图片镜像。需要补的是给图片加 `loading="lazy"` + `decoding="async"`（已加）。
 
-### 3、没有响应式图片
+## （十二）内容扩展能力
 
-`<img srcset>` 没生成。需要补的是 hexo 插件 `hexo-image-sizes` 或 `hexo-renderer-imgix`。
+hexo 静态站可以扩展出很多内容形式。这一项基本没做。
 
-### 4、图片样式基础
+### 1、缺 KaTeX 数学公式
 
-`.post-body img` 没有边框、阴影、圆角。需要补的是加 `border-radius: var(--radius)` 和细微阴影。
+如果用户以后写数学笔记。
 
-## （八）性能与首屏体验
+需要补的是装 `hexo-renderer-katex` 或 `hexo-math`。需要补的是 CSS 里给 `.katex` 加字体兼容。
 
-样式上"看起来贵"是 OK 的。但**真实加载**层面有可以省的。
+### 2、缺 Mermaid 图表
 
-### 1、字体 HTTP 请求
+如果用户以后做流程图、时序图。
 
-Google Fonts 一次性请求四个字体族（Inter、JetBrains Mono、Noto Serif SC、Noto Sans SC）。这一项弱在四个请求串行 + 中文包很大。
+需要补的是装 `hexo-filter-mermaid-diagrams`。需要补的是 light/dark mode 下 mermaid 主题切换。
 
-需要补的是合并到一个 CSS 链接（已经是这样）。需要补的是考虑自托管 woff2。
+### 3、缺代码高亮主题适配
 
-### 2、CSS 文件大小
+highlight.js 当前用 github-dark 单一主题。这一项弱在 light mode 下代码块还是暗的。
 
-当前 style.css 是 24KB / 1026行。这一项不算巨型但有压缩空间。需要补的是用 `lightningcss` 或 `cssnano` 压一遍。
+需要补的是 light mode 下切到 github-light。需要补的是用 prismjs 或 shiki（更现代）。
 
-### 3、JS 文件大小
+### 4、缺引用块学术化
 
-main.js 是 6.6KB / 200+ 行。这一项达标。但 minify 后还能省一半。
+引用块当前有渐变左边框。这一项弱在学术性不够（没标作者/出处/页码）。
 
-### 4、没有 critical CSS
+需要补的是支持 markdown 自定义语法 `> @cite{author, year}` 渲染成学术引用格式。需要补的是 footnote（hexo 已有 hexo-reference）。
 
-首屏 hero 在外部 CSS 加载完之前会显示 fallback。需要补的是把 hero 关键样式 inline 到 `<style>` 块里。
+### 5、缺时间线/年代轴
 
-### 5、没有 `prefers-reduced-motion`
+如果用户做历史、人物类内容（用户博客有大量文学笔记）。
 
-开启系统"减少动效"的用户仍然会看到 hero 渐变 shimmer 动画。需要补的是加 `@media (prefers-reduced-motion: reduce)` 关掉所有动画。
+需要补的是自写一个时间线 shortcode。需要补的是用 `<time>` + CSS Grid 实现。
 
-## （九）文章页细节可丰富
+## 优先级重排
 
-文章详情页（详情页是博客的核心）目前样式偏"骨架"。下面这些细节会让阅读体验大幅提升。
+按"行业标准偏离度 × 修复成本"重排。
 
-### 1、没有章节目录
+第一优先级是字体加载与中文排版精细化。这一档偏离度大但成本中等（一天工作量）。
 
-TOC（`sidebar-toc`）只显示 h2、h3。h1 不显示（hexo 默认就跳 h1 直接进 h2）。需要补的是按需配置 max_depth。
+第二优先级是流体布局与可访问性深化。这一档偏离度中但成本低（半天）。
 
-### 2、没有锚点
+第三优先级是内容扩展与微交互。这一档偏离度低但能提升专业感（长期）。
 
-点击 h2/h3 标题应该显示 `#` 让用户复制。需要补的是加 CSS：
+不建议碰的是前端架构组件化与构建工具引入。这一项收益与代价不对等。hexo 6.x-7.x 时代没必要引入。
 
-```css
-.post-body h2:hover .headerlink,
-.post-body h3:hover .headerlink { opacity: 1; }
-```
-
-需要补的是 hexo 默认会渲染 `.headerlink` 锚点，但当前 CSS 完全没有处理。
-
-### 3、没有复制代码按钮
-
-代码块没法一键复制。需要补的是注入"复制"按钮到 `.code-header` 右侧。
-
-### 4、没有"相关文章"
-
-文章详情页底部没有"你可能也想读"。需要补的是 hexo 插件 `hexo-related-posts` 或自写一个按 tag 重叠度排序的小工具。
-
-### 5、没有字数统计和预计阅读时间
-
-卡片的 footer 有"X 分钟阅读"。但文章页头部没有重复显示。meta 信息可以补在标题下方。
-
-### 6、没有"上一篇 / 下一篇"
-
-文章底部没有导航。这其实 hexo 有 `post.next` 和 `post.prev` 变量可用，主题没用到。
-
-## （十）SEO 与可发现性
-
-搜索引擎层面有几个空缺。
-
-### 1、Open Graph 图片
-
-每篇文章应该有自己的 OG 图。需要补的是 hexo 插件 `hexo-auto-og` 或自写 front-matter `og_image` 字段。
-
-### 2、JSON-LD 结构化数据
-
-文章应该有 `Article` schema。需要补的是在 layout 里注入 `application/ld+json` 块。
-
-### 3、canonical URL
-
-当前没设 `link rel="canonical"`。需要补的是在 head 加 `<%- url %>` 派生 canonical。
-
-### 4、面包屑
-
-分类页、标签页应该有"首页 > 分类 > XXX"面包屑。需要补的是 partial。
-
-### 5、RSS 订阅链接可见
-
-`hexo-generator-feed` 还没装。head 里的 `feed_tag(theme.rss)` 占位是空的。需要补的是装插件、设 `theme.rss: /atom.xml`、UI 加个 RSS 按钮。
-
-## （十一）特殊状态页面空白
-
-下面这些页面目前是 hexo 默认丑样式。
-
-### 1、404 页面
-
-GitHub Pages 的 404 页面是 hexo 默认的（白底+几个字）。需要补的是新建 `source/404.html` 用主题样式+友好提示。
-
-### 2、空状态
-
-如果某分类下没文章、某标签下没文章、搜索没结果。目前是空白。需要补的是 partial 处理空集合。
-
-### 3、加载失败
-
-没有全局错误处理。这一项静态站比较难做（不会有 JS 报错），但样式层面的 `aria-live` 可以补。
-
-### 4、打印样式
-
-当前 print 媒体查询太简单（只隐藏 header/sidebar/footer）。需要补的是：
-
-- 链接加 URL 后缀（`@page` 后的 `content`）
-- 代码块去掉背景色
-- 字号统一 12pt
-- 强制黑字白底
-
-## （十二）代码可维护性
-
-这一项不是用户能直接感知的，但会影响后续改造速度。
-
-### 1、CSS 没有命名空间
-
-类名都是 `entry-title`、`post-card` 这种全局名。第三方插件如果用了同名 class 会冲突。
-
-需要补的是 BEM 化（`.post-card__title`）或者加命名空间前缀（`.ink-entry-title`）。但代价是迁移工作量大。
-
-### 2、变量没有层次
-
-`:root` 里有 50+ 个变量。但 flat 结构。需要补的是分组：
-
-```css
-:root {
-  --color-bg: ...;
-  --color-fg: ...;
-  --color-accent-cyan: ...;
-  --font-serif: ...;
-  --font-size-base: ...;
-  --space-4: ...;
-}
-```
-
-### 3、缺少 dark/light 双套变量
-
-如果将来加 light mode，要全部重写变量赋值。提前把变量名字拆成"语义化"（`--color-surface`）而不是"颜色值"（`--bg-elevated`）会更省事。
-
-### 4、没有 mixin / utility class
-
-阴影、圆角、过渡曲线没抽出来。重复出现多次。需要补的是用 `@layer utilities` 抽几个：
-
-```css
-.u-rounded { border-radius: var(--radius); }
-.u-shadow { box-shadow: var(--shadow-card); }
-```
-
-## 后续改造建议的优先级
-
-按"用户感知强度 × 改动成本"排序。
-
-第一优先级是高感知、低成本的项。第一优先级的项是：可访问性 focus 环、行内代码样式、断点 clamp 平滑。这一档可以在 1-2小时内完成。
-
-第二优先级是高感知、中成本的项。第二优先级的项是：light mode 切换、章节目录锚点、复制代码按钮、图片懒加载。这一档可以分 2-3次完成。
-
-第三优先级是低感知（但长期重要）的项。第三优先级的项是：SEO 结构化数据、相关文章、面包屑、print 样式。这一档可以穿插在其他改造里做。
-
-不建议碰的是：CSS 命名空间重构、字体改自托管。这两项收益与代价不对等。这两项等真有冲突时再处理。
+不建议碰的是 PWA 与 Service Worker。这一项静态博客场景收益有限。这一项等真有"需要离线访问"再说。

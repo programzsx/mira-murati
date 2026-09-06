@@ -1407,7 +1407,7 @@ a:active { opacity: 0.6; }
 }
 .tag-cloud-item:hover .tag-cloud-count { color: var(--color-cyan); }
 
-/* ---------- Taxonomy list (categories index) ---------- */
+/* ---------- Taxonomy list (categories index) — flat fallback ---------- */
 .taxonomy-list { list-style: none; margin: 0; padding: 0; }
 .taxonomy-item { margin-bottom: var(--space-2); }
 .taxonomy-link {
@@ -1435,6 +1435,264 @@ a:active { opacity: 0.6; }
   color: var(--color-fg-muted);
 }
 .taxonomy-sub { list-style: none; margin: var(--space-2) 0 0 var(--space-4); padding: 0; }
+
+/* =========================================================================
+   Taxonomy tree (categories index) — antd / NG-ZORRO style
+   Implements 10 design requirements: guide lines, indentation, toggle,
+   icon distinction, expand animation, row states, mobile sizing, no card,
+   count placement, check circle.
+   ========================================================================= */
+
+.tax-tree {
+  --tax-indent: 24px;
+  --tax-row-h: 44px;
+  --tax-guide-color: #d9d9d9;       /* requirement 1 */
+  --tax-guide-w: 1px;
+  --tax-guide-indent: 18px;         /* guide line sits in the indent area */
+  --tax-accent: var(--color-cyan);
+  --tax-accent-bg: rgba(0, 212, 255, 0.12);
+  --tax-row-h-num: 44px;            /* requirement 7 */
+  font-family: var(--font-sans);
+  font-size: 15px;
+  color: var(--color-fg);
+  user-select: none;
+}
+:root[data-theme="light"] .tax-tree { --tax-guide-color: #d3d7e2; }
+
+.tax-tree-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.tax-tree-list--root { padding: 0; }
+
+.tax-node {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  position: relative;
+}
+
+/* Indent each depth level */
+.tax-node .tax-node-row,
+.tax-node > .tax-children {
+  padding-left: calc(var(--tax-indent) * attr(data-depth number, 0));
+}
+/* The :has() approach above isn't broadly supported for indentation,
+   so we set padding directly on each level via attribute selectors */
+.tax-node[data-depth="0"] > .tax-node-row { padding-left: 0; }
+.tax-node[data-depth="1"] > .tax-node-row { padding-left: calc(var(--tax-indent) * 1); }
+.tax-node[data-depth="2"] > .tax-node-row { padding-left: calc(var(--tax-indent) * 2); }
+.tax-node[data-depth="3"] > .tax-node-row { padding-left: calc(var(--tax-indent) * 3); }
+.tax-node[data-depth="4"] > .tax-node-row { padding-left: calc(var(--tax-indent) * 4); }
+.tax-node[data-depth="5"] > .tax-node-row { padding-left: calc(var(--tax-indent) * 5); }
+.tax-node[data-depth="1"] > .tax-children { padding-left: calc(var(--tax-indent) * 1); }
+.tax-node[data-depth="2"] > .tax-children { padding-left: calc(var(--tax-indent) * 2); }
+.tax-node[data-depth="3"] > .tax-children { padding-left: calc(var(--tax-indent) * 3); }
+.tax-node[data-depth="4"] > .tax-children { padding-left: calc(var(--tax-indent) * 4); }
+.tax-node[data-depth="5"] > .tax-children { padding-left: calc(var(--tax-indent) * 5); }
+
+/* Row: plain horizontal line, no card, no border, no radius, no shadow (requirement 8) */
+.tax-node-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: var(--tax-row-h-num);
+  padding-right: 12px;
+  border-radius: 0;
+  background: transparent;
+  border: 0;
+  position: relative;
+  transition: background-color 150ms var(--ease);
+}
+
+/* Hover state (requirement 6) */
+.tax-node-row:hover { background-color: var(--tax-accent-bg); }
+.tax-node-row:hover .tax-name { color: var(--tax-accent); }
+.tax-node-row:hover .tax-icon { color: var(--tax-accent); }
+
+/* Selected state (requirement 6) */
+.tax-node.is-selected > .tax-node-row {
+  background: var(--tax-accent);
+}
+.tax-node.is-selected > .tax-node-row .tax-name,
+.tax-node.is-selected > .tax-node-row .tax-icon,
+.tax-node.is-selected > .tax-node-row .tax-count,
+.tax-node.is-selected > .tax-node-row .tax-toggle { color: #fff; }
+.tax-node.is-selected > .tax-node-row .tax-check { border-color: #fff; }
+.tax-node.is-selected > .tax-node-row .tax-check::after { background: #fff; }
+.tax-node.is-selected > .tax-node-row .tax-icon svg path[fill="currentColor"] { fill: #fff; opacity: 0.32; }
+.tax-node.is-selected > .tax-node-row .tax-icon svg path[stroke="currentColor"] { stroke: #fff; }
+
+/* Toggle (requirement 3) */
+.tax-toggle {
+  width: 20px;
+  height: 20px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: 0;
+  color: var(--color-fg-muted);
+  cursor: pointer;
+  padding: 0;
+  flex-shrink: 0;
+  border-radius: 4px;
+  transition: color var(--t-fast) var(--ease), background-color var(--t-fast) var(--ease);
+}
+.tax-toggle:hover { color: var(--tax-accent); background: rgba(0, 212, 255, 0.1); }
+.tax-toggle svg { transition: transform 200ms var(--ease); }
+.tax-node[aria-expanded="true"] > .tax-node-row > .tax-toggle svg { transform: rotate(90deg); }
+.tax-toggle--spacer { display: inline-block; visibility: hidden; }
+
+/* Icon (requirement 4) */
+.tax-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  color: var(--color-fg-secondary);
+  transition: color var(--t-fast) var(--ease);
+}
+.tax-icon--folder { color: var(--tax-accent); }
+
+/* Name (link) */
+.tax-name {
+  color: var(--color-fg);
+  text-decoration: none;
+  font-weight: 500;
+  font-size: 15px;
+  background: none;
+  border: 0;
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  padding: 0 4px;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  transition: color var(--t-fast) var(--ease);
+}
+.tax-name:hover { color: var(--tax-accent); background: none; }
+
+/* Count (requirement 9) */
+.tax-count {
+  color: var(--color-fg-muted);
+  font-size: 12px;
+  font-family: var(--font-mono);
+  flex-shrink: 0;
+  font-variant-numeric: tabular-nums;
+  margin-left: 8px;
+  font-weight: 500;
+}
+
+/* Checkbox circle (requirement 10) */
+.tax-check {
+  position: relative;
+  width: 18px;
+  height: 18px;
+  min-width: 36px;
+  min-height: 36px;
+  background: transparent;
+  border: 0;
+  padding: 0;
+  margin: 0;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  -webkit-tap-highlight-color: transparent;
+}
+.tax-check::before {
+  content: '';
+  width: 16px;
+  height: 16px;
+  border: 1.5px solid var(--color-border-strong);
+  border-radius: 50%;
+  transition: all var(--t-fast) var(--ease);
+  background: transparent;
+}
+.tax-check::after {
+  content: '';
+  position: absolute;
+  width: 8px;
+  height: 4px;
+  border-left: 2px solid transparent;
+  border-bottom: 2px solid transparent;
+  transform: rotate(-45deg) translate(1px, -1px);
+  transition: all var(--t-fast) var(--ease);
+  opacity: 0;
+}
+.tax-check:hover::before { border-color: var(--tax-accent); }
+.tax-check[aria-checked="true"]::before {
+  border-color: var(--tax-accent);
+  background: var(--tax-accent);
+}
+.tax-check[aria-checked="true"]::after {
+  border-left-color: #fff;
+  border-bottom-color: #fff;
+  opacity: 1;
+}
+
+/* Guide lines (requirement 1) */
+.tax-node .tax-node-row::before,
+.tax-node .tax-node-row::after {
+  content: '';
+  position: absolute;
+  pointer-events: none;
+  background: var(--tax-guide-color);
+}
+
+/* Vertical guide from this node's icon center down to the row baseline */
+.tax-node .tax-node-row::before {
+  left: var(--tax-guide-indent);
+  top: 0;
+  bottom: 0;
+  width: var(--tax-guide-w);
+  display: none;
+}
+.tax-node:not([data-depth="0"]) .tax-node-row::before { display: block; }
+
+/* Horizontal stub from the vertical line to the icon */
+.tax-node .tax-node-row::after {
+  left: var(--tax-guide-indent);
+  top: 50%;
+  width: calc(var(--tax-indent) - var(--tax-guide-indent) + 8px);
+  height: var(--tax-guide-w);
+  display: none;
+}
+.tax-node:not([data-depth="0"]) .tax-node-row::after { display: block; }
+
+/* Vertical continuation: hide the lower half on the LAST child (requirement 1) */
+.tax-node[data-last="1"] > .tax-node-row::before { bottom: 50%; }
+
+/* Children list: animate expand/collapse (requirement 5) */
+.tax-children {
+  overflow: hidden;
+  max-height: 5000px;
+  transition: max-height 250ms var(--ease);
+}
+.tax-node[aria-expanded="false"] > .tax-children {
+  max-height: 0;
+}
+
+/* When the node is collapsed, the horizontal stub should not draw on its own row
+   (the vertical line is already cut at 50%, but the stub still points into nothing) */
+.tax-node[aria-expanded="false"][data-last="1"] > .tax-node-row::after,
+.tax-node[aria-expanded="false"] > .tax-node-row::after { display: none; }
+
+/* Mobile: bigger rows, smaller indent (requirement 7) */
+@media (max-width: 720px) {
+  .tax-tree { --tax-indent: 28px; --tax-row-h-num: 48px; font-size: 15px; }
+  .tax-name { font-size: 15px; }
+  .tax-count { font-size: 12px; }
+}
 
 /* ---------- Breadcrumbs ---------- */
 .breadcrumbs {
