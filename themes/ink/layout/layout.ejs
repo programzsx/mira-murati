@@ -32,16 +32,17 @@ var hasSiteGate = sitePassword.length > 0;
     <%- partial('_partial/footer') %>
   </div>
   <% if (effectiveGate) { %>
-  <div class="password-gate password-gate--site" id="password-gate">
+  <div class="password-gate password-gate--site" id="password-gate" role="dialog" aria-modal="true" aria-labelledby="gate-title" aria-describedby="gate-desc">
     <div class="password-gate-inner">
-      <div class="password-gate-icon">🔒</div>
-      <h3>本站需要密码</h3>
-      <p>请输入密码后继续</p>
+      <div class="password-gate-icon" aria-hidden="true">🔒</div>
+      <h3 id="gate-title">本站需要密码</h3>
+      <p id="gate-desc">请输入密码后继续</p>
       <div class="password-gate-input">
+        <label for="password-input" class="u-sr-only">密码</label>
         <input type="password" id="password-input" placeholder="输入密码" autocomplete="off">
-        <button id="password-submit">确认</button>
+        <button id="password-submit" type="button">确认</button>
       </div>
-      <p id="password-error" class="password-error"></p>
+      <p id="password-error" class="password-error" role="alert" aria-live="polite"></p>
     </div>
   </div>
   <% } %>

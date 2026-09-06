@@ -93,6 +93,45 @@
     if (!img.hasAttribute('decoding')) img.setAttribute('decoding', 'async');
   });
 
+  /* ---------- Lightbox: click-to-zoom images in post body ---------- */
+  var lb = document.createElement('div');
+  lb.className = 'lightbox';
+  lb.setAttribute('role', 'dialog');
+  lb.setAttribute('aria-modal', 'true');
+  lb.setAttribute('aria-label', '图片预览');
+  lb.style.cssText = 'position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,0.92);display:none;align-items:center;justify-content:center;padding:2rem;cursor:zoom-out;';
+  lb.innerHTML = '<img alt="" style="max-width:95vw;max-height:95vh;object-fit:contain;border-radius:8px;box-shadow:0 24px 64px rgba(0,0,0,0.6);"><button type="button" aria-label="关闭" style="position:absolute;top:1.5rem;right:1.5rem;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);color:#fff;width:44px;height:44px;border-radius:50%;font-size:1.25rem;cursor:pointer;backdrop-filter:blur(8px);">×</button>';
+  document.body.appendChild(lb);
+  var lbImg = lb.querySelector('img');
+  var lbClose = lb.querySelector('button');
+
+  function openLightbox(src, alt) {
+    lbImg.src = src;
+    lbImg.alt = alt || '';
+    lb.style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+  }
+  function closeLightbox() {
+    lb.style.display = 'none';
+    lbImg.src = '';
+    document.body.style.overflow = '';
+  }
+  lb.addEventListener('click', closeLightbox);
+  lbClose.addEventListener('click', function (e) { e.stopPropagation(); closeLightbox(); });
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape' && lb.style.display === 'flex') closeLightbox();
+  });
+
+  document.querySelectorAll('.post-body img, .entry-content img').forEach(function (img) {
+    img.style.cursor = 'zoom-in';
+    img.setAttribute('tabindex', '0');
+    img.setAttribute('role', 'button');
+    img.setAttribute('aria-label', '点击放大图片');
+    var activate = function () { openLightbox(img.src, img.alt); };
+    img.addEventListener('click', activate);
+    img.addEventListener('keydown', function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); activate(); } });
+  });
+
   /* ---------- Reading progress bar ---------- */
   var progress = document.getElementById('reading-progress');
   if (progress) {
