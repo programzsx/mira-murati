@@ -348,6 +348,12 @@ a:focus-visible {
 }
 .nav-menu a.active::after { width: 100%; }
 
+.nav-right {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+}
+
 /* ---------- Sidebar (TOC) ---------- */
 .sidebar {
   position: sticky;

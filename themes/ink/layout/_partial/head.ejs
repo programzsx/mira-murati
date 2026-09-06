@@ -21,7 +21,19 @@
   <% } %>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <%# Preload the two most-used weights to cut FOUT on first paint %>
+  <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&family=Noto+Serif+SC:wght@700;800&display=swap">
+  <%# Chinese subset only, latin + latin-ext for English. Swap for fast fallback. %>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Noto+Serif+SC:wght@600;700;800;900&family=Noto+Sans+SC:wght@400;500;700;900&display=swap" rel="stylesheet">
+  <script>
+    // Apply saved theme before paint to avoid flash.
+    (function () {
+      try {
+        var t = localStorage.getItem('ink-theme');
+        if (t) document.documentElement.setAttribute('data-theme', t);
+      } catch (e) {}
+    })();
+  </script>
   <%- css('css/style') %>
   <% if (theme.site_password && theme.site_password.length > 0) { %>
   <meta name="site-password" content="<%= theme.site_password %>">
