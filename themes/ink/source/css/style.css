@@ -427,15 +427,34 @@ a:focus-visible {
 }
 
 .sidebar-toc .toc-child { padding-left: 0; }
-.sidebar-toc .toc-item { display: flex; align-items: baseline; }
+.sidebar-toc .toc-item { margin: 0; list-style: none; }
+.sidebar-toc .toc-item.toc-level-2 > .toc-link { padding-left: var(--space-4); }
+.sidebar-toc .toc-item.toc-level-3 > .toc-link { padding-left: var(--space-6); }
+.sidebar-toc .toc-item.toc-level-4 > .toc-link { padding-left: calc(var(--space-6) + var(--space-3)); }
+.sidebar-toc .toc-link {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: block;
+  padding: var(--space-2) var(--space-3);
+  color: var(--fg-muted);
+  font-size: 0.875rem;
+  line-height: 1.5;
+  border-left: 2px solid transparent;
+  margin-left: -1px;
+  transition: all var(--t-fast) var(--ease);
+  background: none !important;
+}
 .sidebar-toc .toc-number {
   font-family: var(--font-mono);
   font-size: 0.75rem;
   color: var(--fg-faint);
-  margin-right: var(--space-2);
+  margin-right: 6px;
   font-variant-numeric: tabular-nums;
+  display: inline-block;
   flex-shrink: 0;
 }
+.sidebar-toc .toc-text { word-break: normal; }
 
 /* ---------- Hero (index page) ---------- */
 .hero {
