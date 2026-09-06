@@ -208,6 +208,12 @@ a:focus-visible {
   align-items: start;
 }
 
+/* Home (no sidebar) — single full-width column */
+.content-wrapper.is-home {
+  grid-template-columns: 1fr;
+  gap: 0;
+}
+
 .main {
   min-width: 0;
   max-width: 100%;
