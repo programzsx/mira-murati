@@ -13,8 +13,13 @@ var hasSiteGate = sitePassword.length > 0;
   <div class="reading-progress" id="reading-progress"></div>
   <div class="site" id="post-body-protected" style="<%= hasSiteGate ? 'display:none;' : '' %>">
     <%- partial('_partial/header') %>
-    <div class="content-wrapper <%= is_home() ? 'is-home' : 'is-detail' %>">
-      <% if (!is_home()) { %><%- partial('_partial/sidebar') %><% } %>
+    <%
+    // Only post detail pages have a sidebar (TOC). All other pages
+    // (home, category, tag, archive, custom pages) use a single full-width column.
+    var hasSidebar = is_post();
+    %>
+    <div class="content-wrapper <%= hasSidebar ? 'is-detail' : 'is-list' %>">
+      <% if (hasSidebar) { %><%- partial('_partial/sidebar') %><% } %>
       <main class="main">
         <%- body %>
       </main>

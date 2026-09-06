@@ -1,24 +1,29 @@
 <% if (page.tag) { %>
 <!-- Single Tag Page -->
-<div class="tag-page">
-  <h1 class="page-title"><%= __('tag') %>: <%= page.tag %></h1>
+<section class="page-hero reveal">
+  <span class="page-hero-label"><%= __('tag') %></span>
+  <h1 class="page-hero-title"><span class="accent">#<%= page.tag %></span></h1>
+  <p class="page-hero-meta"><%= page.posts.length %> <%= __('posts') %></p>
+</section>
 
-  <% if (page.posts && page.posts.length > 0) { %>
-  <div class="posts">
-    <% page.posts.each(function(post) { %>
-      <%- partial('_partial/article', { post: post, index: true }) %>
-    <% }) %>
-  </div>
-  <% } else { %>
-  <p class="empty"><%= __('no_posts') %></p>
-  <% } %>
-
-  <%- partial('_partial/pagination') %>
+<% if (page.posts && page.posts.length > 0) { %>
+<div class="posts">
+  <% page.posts.each(function(post) { %>
+    <%- partial('_partial/article', { post: post, index: true }) %>
+  <% }) %>
 </div>
 <% } else { %>
+<p class="empty"><%= __('no_posts') %></p>
+<% } %>
+
+<%- partial('_partial/pagination') %>
+<% } else { %>
 <!-- Tags Index Page -->
-<div class="tags-index">
-  <h1 class="page-title"><%= __('tags') %></h1>
+<section class="page-hero reveal">
+  <span class="page-hero-label"><%= __('tags') %></span>
+  <h1 class="page-hero-title"><span class="accent"><%= __('all_tags') %></span></h1>
+  <p class="page-hero-meta"><%= site.tags.length %> <%= __('tags') %></p>
+</section>
 
   <%
   // Compute max post count for tag sizing

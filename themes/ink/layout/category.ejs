@@ -1,24 +1,29 @@
 <% if (page.category) { %>
 <!-- Single Category Page -->
-<div class="category-page">
-  <h1 class="page-title"><%= __('category') %>: <%= page.category %></h1>
+<section class="page-hero reveal">
+  <span class="page-hero-label"><%= __('category') %></span>
+  <h1 class="page-hero-title"><span class="accent"><%= page.category %></span></h1>
+  <p class="page-hero-meta"><%= page.posts.length %> <%= __('posts') %></p>
+</section>
 
-  <% if (page.posts && page.posts.length > 0) { %>
-  <div class="posts">
-    <% page.posts.each(function(post) { %>
-      <%- partial('_partial/article', { post: post, index: true }) %>
-    <% }) %>
-  </div>
-  <% } else { %>
-  <p class="empty"><%= __('no_posts') %></p>
-  <% } %>
-
-  <%- partial('_partial/pagination') %>
+<% if (page.posts && page.posts.length > 0) { %>
+<div class="posts">
+  <% page.posts.each(function(post) { %>
+    <%- partial('_partial/article', { post: post, index: true }) %>
+  <% }) %>
 </div>
 <% } else { %>
+<p class="empty"><%= __('no_posts') %></p>
+<% } %>
+
+<%- partial('_partial/pagination') %>
+<% } else { %>
 <!-- Categories Index Page -->
-<div class="categories-index">
-  <h1 class="page-title"><%= __('categories') %></h1>
+<section class="page-hero reveal">
+  <span class="page-hero-label"><%= __('categories') %></span>
+  <h1 class="page-hero-title"><span class="accent"><%= __('all_categories') %></span></h1>
+  <p class="page-hero-meta"><%= site.categories.length %> <%= __('categories') %></p>
+</section>
 
   <%
   // Build category tree: top-level vs children by parent _id

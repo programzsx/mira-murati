@@ -208,8 +208,9 @@ a:focus-visible {
   align-items: start;
 }
 
-/* Home (no sidebar) — single full-width column */
-.content-wrapper.is-home {
+/* Single full-width column for any page without a sidebar
+   (home, category, tag, archive, custom pages) */
+.content-wrapper.is-list {
   grid-template-columns: 1fr;
   gap: 0;
 }
@@ -392,6 +393,54 @@ a:focus-visible {
 @keyframes pulse {
   0%, 100% { opacity: 1; }
   50% { opacity: 0.4; }
+}
+
+/* ---------- Page hero (category / tag / archive / page) ----------
+   Smaller than index hero, shares the same label/title/meta pattern. */
+.page-hero {
+  padding: var(--space-7) 0 var(--space-5);
+  border-bottom: 1px solid var(--border);
+  margin-bottom: var(--space-5);
+}
+.page-hero-label {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: 4px 12px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: 100px;
+  font-family: var(--font-mono);
+  font-size: var(--fs-xs);
+  font-weight: 500;
+  color: var(--cyan);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  margin-bottom: var(--space-3);
+}
+.page-hero-title {
+  font-family: var(--font-serif);
+  font-size: clamp(1.875rem, 4vw, 2.625rem);
+  font-weight: 800;
+  line-height: 1.15;
+  letter-spacing: -0.025em;
+  margin: 0 0 var(--space-2);
+  color: var(--fg);
+  word-break: break-word;
+}
+.page-hero-title .accent {
+  background: var(--gradient);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-size: 200% 200%;
+  animation: logo-shimmer 6s ease-in-out infinite;
+}
+.page-hero-meta {
+  font-family: var(--font-mono);
+  font-size: var(--fs-sm);
+  color: var(--fg-muted);
+  margin: 0;
 }
 
 .hero-title {

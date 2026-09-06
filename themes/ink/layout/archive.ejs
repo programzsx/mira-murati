@@ -1,5 +1,9 @@
 <div class="archive">
-  <h1 class="page-title"><%= __('archive') %></h1>
+  <section class="page-hero reveal">
+    <span class="page-hero-label"><%= __('archive') %></span>
+    <h1 class="page-hero-title"><span class="accent"><%= __('all_posts') %></span></h1>
+    <p class="page-hero-meta"><%= site.posts.length %> <%= __('posts') %></p>
+  </section>
 
   <% var yearlyPosts = {}; %>
   <% page.posts.each(function(post) { %>
