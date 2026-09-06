@@ -59,6 +59,13 @@ crumbs.push({ name: page.title, url: false });
   </nav>
   <% } %>
 
+  <div class="share-row" data-share-url="<%- config.url + url_for(page.path) %>" data-share-title="<%= page.title %>">
+    <span class="label">分享</span>
+    <button class="share-btn" type="button" data-share-action="copy" aria-label="复制链接">复制链接</button>
+    <a class="share-btn" data-share-action="twitter" aria-label="分享到 Twitter">Twitter</a>
+    <a class="share-btn" data-share-action="weibo" aria-label="分享到微博">微博</a>
+  </div>
+
   <% if (related.length > 0) { %>
   <section class="related" aria-labelledby="related-heading">
     <h2 class="related-heading" id="related-heading">相关文章</h2>

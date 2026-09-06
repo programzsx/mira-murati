@@ -10,6 +10,7 @@ var hasSiteGate = sitePassword.length > 0;
 <html lang="<%= config.language %>">
 <%- partial('_partial/head') %>
 <body>
+  <a class="skip-link" href="#main-content">跳到正文</a>
   <div class="reading-progress" id="reading-progress"></div>
   <%
   // 404 page bypasses the password gate so the not-found page is itself reachable
@@ -25,12 +26,24 @@ var hasSiteGate = sitePassword.length > 0;
     %>
     <div class="content-wrapper <%= hasSidebar ? 'is-detail' : 'is-list' %>">
       <% if (hasSidebar) { %><%- partial('_partial/sidebar') %><% } %>
-      <main class="main">
+      <main class="main" id="main-content" tabindex="-1">
         <%- body %>
       </main>
     </div>
     <%- partial('_partial/footer') %>
   </div>
+  <div class="search-overlay" id="search-overlay" role="dialog" aria-modal="true" aria-label="搜索" hidden>
+    <div class="search-overlay-backdrop" data-search-close></div>
+    <div class="search-overlay-panel">
+      <div class="search-overlay-input">
+        <svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true" class="search-overlay-icon"><circle cx="7" cy="7" r="4.5" fill="none" stroke="currentColor" stroke-width="1.6"/><line x1="10.5" y1="10.5" x2="14" y2="14" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+        <input id="search-input" type="search" placeholder="搜索文章..." autocomplete="off" aria-label="搜索输入">
+        <kbd class="search-overlay-esc">ESC</kbd>
+      </div>
+      <div class="search-results" id="search-results" aria-live="polite"></div>
+    </div>
+  </div>
+
   <% if (effectiveGate) { %>
   <div class="password-gate password-gate--site" id="password-gate" role="dialog" aria-modal="true" aria-labelledby="gate-title" aria-describedby="gate-desc">
     <div class="password-gate-inner">

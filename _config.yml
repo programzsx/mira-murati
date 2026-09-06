@@ -113,6 +113,13 @@ feed:
   limit: 20
   hub:
 
+# Local search
+search:
+  path: search.json
+  field: post
+  content: true
+  format: html
+
 # Deployment
 ## Docs: https://hexo.io/docs/one-command-deployment
 deploy:

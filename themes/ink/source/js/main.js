@@ -204,6 +204,140 @@
     });
   }
 
+  /* ---------- Search overlay ---------- */
+  var searchBtn = document.getElementById('search-btn');
+  var searchOverlay = document.getElementById('search-overlay');
+  var searchInput = document.getElementById('search-input');
+  var searchResults = document.getElementById('search-results');
+  var searchData = null;
+  var searchHits = [];
+  var searchActive = 0;
+
+  function loadSearch() {
+    if (searchData) return Promise.resolve(searchData);
+    return fetch('/search.json').then(function (r) { return r.json(); }).then(function (d) { searchData = d; return d; }).catch(function () { searchData = []; });
+  }
+  function openSearch() {
+    if (!searchOverlay) return;
+    searchOverlay.hidden = false;
+    setTimeout(function () { searchInput.focus(); }, 30);
+    loadSearch();
+  }
+  function closeSearch() {
+    if (!searchOverlay) return;
+    searchOverlay.hidden = true;
+    if (searchInput) { searchInput.value = ''; }
+    if (searchResults) { searchResults.innerHTML = ''; }
+    searchHits = [];
+  }
+  function highlight(text, q) {
+    if (!q) return text;
+    try {
+      var safe = q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      var re = new RegExp('(' + safe + ')', 'gi');
+      return text.replace(re, '<mark>$1</mark>');
+    } catch (e) { return text; }
+  }
+  function renderSearch(query) {
+    if (!searchResults) return;
+    searchResults.innerHTML = '';
+    if (!query) { searchHits = []; return; }
+    var lower = query.toLowerCase();
+    var hits = [];
+    if (Array.isArray(searchData)) {
+      searchData.forEach(function (post) {
+        if (!post) return;
+        var title = post.title || '';
+        var content = (post.content || '').replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+        if (title.toLowerCase().indexOf(lower) >= 0 || content.toLowerCase().indexOf(lower) >= 0) {
+          var idx = content.toLowerCase().indexOf(lower);
+          var snippet = idx >= 0 ? content.substring(Math.max(0, idx - 30), idx + query.length + 80) : content.substring(0, 120);
+          hits.push({ title: title, url: post.url, snippet: snippet });
+        }
+      });
+    }
+    if (hits.length === 0) {
+      searchResults.innerHTML = '<p class="empty">无匹配结果</p>';
+      searchHits = [];
+      return;
+    }
+    hits.slice(0, 12).forEach(function (h, i) {
+      var a = document.createElement('a');
+      a.className = 'search-hit' + (i === 0 ? ' is-active' : '');
+      a.href = h.url;
+      a.innerHTML = '<span class="search-hit-title">' + highlight(h.title, query) + '</span><span class="search-hit-snippet">' + highlight(h.snippet + '...', query) + '</span>';
+      searchResults.appendChild(a);
+    });
+    searchHits = Array.prototype.slice.call(searchResults.querySelectorAll('.search-hit'));
+  }
+  if (searchBtn) searchBtn.addEventListener('click', openSearch);
+  if (searchOverlay) {
+    searchOverlay.addEventListener('click', function (e) {
+      if (e.target.matches('[data-search-close]') || e.target.classList.contains('search-overlay-backdrop')) closeSearch();
+    });
+  }
+  if (searchInput) {
+    var t;
+    searchInput.addEventListener('input', function () {
+      clearTimeout(t);
+      var q = searchInput.value.trim();
+      t = setTimeout(function () { renderSearch(q); }, 150);
+    });
+  }
+  document.addEventListener('keydown', function (e) {
+    if (e.key === '/' && !searchOverlay || (e.key === '/' && searchOverlay && searchOverlay.hidden)) {
+      // Don't trigger when typing in inputs
+      var t = e.target;
+      if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.isContentEditable)) return;
+      e.preventDefault();
+      openSearch();
+    } else if (e.key === 'Escape' && searchOverlay && !searchOverlay.hidden) {
+      closeSearch();
+    } else if (e.key === 'ArrowDown' && !searchOverlay.hidden && searchHits.length) {
+      e.preventDefault();
+      searchActive = (searchActive + 1) % searchHits.length;
+      searchHits.forEach(function (h, i) { h.classList.toggle('is-active', i === searchActive); });
+      searchHits[searchActive].scrollIntoView({ block: 'nearest' });
+    } else if (e.key === 'ArrowUp' && !searchOverlay.hidden && searchHits.length) {
+      e.preventDefault();
+      searchActive = (searchActive - 1 + searchHits.length) % searchHits.length;
+      searchHits.forEach(function (h, i) { h.classList.toggle('is-active', i === searchActive); });
+      searchHits[searchActive].scrollIntoView({ block: 'nearest' });
+    } else if (e.key === 'Enter' && !searchOverlay.hidden && searchHits[searchActive]) {
+      e.preventDefault();
+      window.location.href = searchHits[searchActive].href;
+    }
+  });
+
+  /* ---------- Share buttons ---------- */
+  document.querySelectorAll('.share-row').forEach(function (row) {
+    var url = row.getAttribute('data-share-url') || window.location.href;
+    var title = row.getAttribute('data-share-title') || document.title;
+    var encUrl = encodeURIComponent(url);
+    var encTitle = encodeURIComponent(title);
+    row.querySelectorAll('[data-share-action]').forEach(function (btn) {
+      var act = btn.getAttribute('data-share-action');
+      if (act === 'copy') {
+        btn.addEventListener('click', function () {
+          navigator.clipboard.writeText(url).then(function () {
+            btn.classList.add('copied');
+            var t = btn.textContent;
+            btn.textContent = '已复制';
+            setTimeout(function () { btn.classList.remove('copied'); btn.textContent = t; }, 1500);
+          });
+        });
+      } else if (act === 'twitter') {
+        btn.href = 'https://twitter.com/intent/tweet?text=' + encTitle + '&url=' + encUrl;
+        btn.target = '_blank';
+        btn.rel = 'noopener';
+      } else if (act === 'weibo') {
+        btn.href = 'https://service.weibo.com/share/share.php?url=' + encUrl + '&title=' + encTitle;
+        btn.target = '_blank';
+        btn.rel = 'noopener';
+      }
+    });
+  });
+
   /* ---------- Reveal on scroll (IntersectionObserver) ---------- */
   if ('IntersectionObserver' in window) {
     var revealIO = new IntersectionObserver(function (entries) {
