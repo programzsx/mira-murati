@@ -1,8 +1,8 @@
-/* Ink Theme — Minimal Client Scripts */
+/* Ink Theme — Cyber-noir Editorial Client Scripts */
 (function () {
   'use strict';
 
-  // ── Helpers ──
+  /* ---------- Helpers ---------- */
   function sha256(text) {
     return crypto.subtle.digest('SHA-256', new TextEncoder().encode(text))
       .then(function (buf) {
@@ -15,13 +15,13 @@
       });
   }
 
-  // ── Copyright year ──
+  /* ---------- Copyright year ---------- */
   var el = document.getElementById('copyright-year');
   if (el) {
     el.textContent = new Date().getFullYear();
   }
 
-  // ── TOC toggle for mobile ──
+  /* ---------- TOC toggle for mobile ---------- */
   var toc = document.querySelector('.toc');
   if (toc) {
     var toggle = toc.querySelector('.toc-toggle');
@@ -32,10 +32,9 @@
     }
   }
 
-  // ── Code block beautify: add header bar with macOS dots + language label ──
+  /* ---------- Code block beautify ---------- */
   var highlights = document.querySelectorAll('.post-body .highlight');
   highlights.forEach(function (fig) {
-    // Extract language from class (e.g., "highlight bash" → "bash")
     var lang = '';
     var classes = fig.className.split(/\s+/);
     for (var i = 0; i < classes.length; i++) {
@@ -44,33 +43,84 @@
         break;
       }
     }
-
-    // Create header bar
     var header = document.createElement('div');
     header.className = 'code-header';
-
-    // macOS dots
     var dots = document.createElement('div');
     dots.className = 'dots';
     dots.innerHTML = '<span></span><span></span><span></span>';
     header.appendChild(dots);
-
-    // Language label
     if (lang) {
       var label = document.createElement('span');
       label.className = 'lang-label';
       label.textContent = lang;
       header.appendChild(label);
     }
-
-    // Insert header before the table
     fig.insertBefore(header, fig.firstChild);
   });
 
-  // ── Site-wide password gate ──
-  // Triggered by <meta name="site-password" content="<CLEAR-PASSWORD>">.
-  // The site password is sent cleartext (it has to be — client must hash it),
-  // so the gate is only a soft barrier. Don't rely on it for real secrets.
+  /* ---------- Reading progress bar ---------- */
+  var progress = document.getElementById('reading-progress');
+  if (progress) {
+    var updateProgress = function () {
+      var doc = document.documentElement;
+      var scrollTop = window.scrollY || doc.scrollTop;
+      var max = (doc.scrollHeight - doc.clientHeight) || 1;
+      var pct = Math.min(100, Math.max(0, (scrollTop / max) * 100));
+      progress.style.setProperty('--progress', pct + '%');
+    };
+    window.addEventListener('scroll', updateProgress, { passive: true });
+    window.addEventListener('resize', updateProgress, { passive: true });
+    updateProgress();
+  }
+
+  /* ---------- Reveal on scroll (IntersectionObserver) ---------- */
+  if ('IntersectionObserver' in window) {
+    var revealIO = new IntersectionObserver(function (entries) {
+      entries.forEach(function (entry) {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('in');
+          revealIO.unobserve(entry.target);
+        }
+      });
+    }, { rootMargin: '0px 0px -8% 0px', threshold: 0.05 });
+
+    document.querySelectorAll('.reveal').forEach(function (el) {
+      revealIO.observe(el);
+    });
+  } else {
+    document.querySelectorAll('.reveal').forEach(function (el) {
+      el.classList.add('in');
+    });
+  }
+
+  /* ---------- TOC scroll-spy ---------- */
+  var tocLinks = document.querySelectorAll('.sidebar-toc a[href^="#"]');
+  if (tocLinks.length && 'IntersectionObserver' in window) {
+    var headings = [];
+    tocLinks.forEach(function (a) {
+      var id = a.getAttribute('href').slice(1);
+      var h = document.getElementById(id);
+      if (h) headings.push({ id: id, el: h, link: a });
+    });
+
+    var setActive = function (id) {
+      tocLinks.forEach(function (a) { a.classList.remove('active'); });
+      var target = document.querySelector('.sidebar-toc a[href="#' + id + '"]');
+      if (target) target.classList.add('active');
+    };
+
+    var spy = new IntersectionObserver(function (entries) {
+      entries.forEach(function (entry) {
+        if (entry.isIntersecting) {
+          setActive(entry.target.id);
+        }
+      });
+    }, { rootMargin: '-20% 0px -70% 0px' });
+
+    headings.forEach(function (h) { spy.observe(h.el); });
+  }
+
+  /* ---------- Site-wide password gate ---------- */
   var siteMeta = document.querySelector('meta[name="site-password"]');
   if (siteMeta) {
     var sitePassword = siteMeta.getAttribute('content');
@@ -110,9 +160,7 @@
     });
   }
 
-  // ── Per-post password gate (legacy) ──
-  // Triggered by <meta name="post-password" content="<CLEAR-PASSWORD>">.
-  // Only runs if the site-wide gate did not already render #password-gate.
+  /* ---------- Per-post password gate (legacy) ---------- */
   var postMeta = document.querySelector('meta[name="post-password"]');
   if (postMeta && !siteMeta) {
     var correctPassword = postMeta.getAttribute('content');

@@ -1,4 +1,21 @@
-<!-- Post List -->
+<!-- Hero -->
+<section class="hero reveal">
+  <span class="hero-tag">在写 · 在读 · 在思考</span>
+  <h1 class="hero-title">
+    <span class="accent"><%= config.title %></span>
+  </h1>
+  <p class="hero-subtitle"><%= config.description || '一个关于写代码、读书、思考的角落。' %></p>
+  <div class="hero-stats">
+    <span><strong><%= site.posts.length %></strong>文章</span>
+    <span><strong><%= site.categories.length %></strong>分类</span>
+    <span><strong><%= site.tags.length %></strong>标签</span>
+  </div>
+</section>
+
+<!-- Section heading -->
+<h2 class="section-heading reveal">最新文章</h2>
+
+<!-- Post list -->
 <div class="posts">
   <% page.posts.each(function(post) { %>
     <%- partial('_partial/article', { post: post, index: true }) %>

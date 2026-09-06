@@ -6,13 +6,13 @@
   %>
 
   <header class="entry-header">
+    <% if (index) { %>
     <h2 class="entry-title">
-      <% if (index) { %>
       <a href="<%- url_for(post.path) %>"><%= post.title %></a>
-      <% } else { %>
-      <%= post.title %>
-      <% } %>
     </h2>
+    <% } else { %>
+    <h1 class="entry-title-detail"><%= post.title %></h1>
+    <% } %>
   </header>
 
   <% if (index) { %>
