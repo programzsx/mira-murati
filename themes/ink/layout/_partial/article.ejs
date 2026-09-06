@@ -1,4 +1,4 @@
-<article class="post-card">
+<article class="<%= index ? 'post-card' : 'post-detail-article' %>">
   <%
   var rawText = post.content.replace(/<[^>]+>/g, '').replace(/\s/g, '');
   var charCount = rawText.length;
