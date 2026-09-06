@@ -1024,3 +1024,19 @@ a {
   margin-top: 0.6rem;
   min-height: 1.2em;
 }
+
+/* Site-wide gate: fullscreen overlay (not the inline per-post variant) */
+.password-gate--site {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  min-height: 100vh;
+  background: #fafafa;
+  flex-direction: column;
+  gap: 0;
+}
+
+body[data-theme="dark"] .password-gate--site,
+body.dark .password-gate--site {
+  background: #0d1117;
+}

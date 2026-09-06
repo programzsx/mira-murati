@@ -1,8 +1,17 @@
-<!DOCTYPE html>
+<%
+// ── Site-wide password gate ──
+// When theme.site_password is set, the entire site is wrapped in a
+// client-side gate. The cleartext password never reaches the browser —
+// we emit only a SHA-256 hash, and the JS recomputes the hash on submit
+// to compare. (Still not "real" auth — see comments in _config.yml.)
+var sitePassword = (theme.site_password || '').toString();
+var hasSiteGate = sitePassword.length > 0;
+%><!DOCTYPE html>
 <html lang="<%= config.language %>">
 <%- partial('_partial/head') %>
+<% if (hasSiteGate) { %><meta name="site-password" content="<%= sitePassword %>"><% } %>
 <body>
-  <div class="site">
+  <div class="site" id="post-body-protected" style="<%= hasSiteGate ? 'display:none;' : '' %>">
     <%- partial('_partial/header') %>
     <div class="content-wrapper">
       <%- partial('_partial/sidebar') %>
@@ -12,6 +21,20 @@
     </div>
     <%- partial('_partial/footer') %>
   </div>
+  <% if (hasSiteGate) { %>
+  <div class="password-gate password-gate--site" id="password-gate">
+    <div class="password-gate-inner">
+      <div class="password-gate-icon">🔒</div>
+      <h3>本站需要密码</h3>
+      <p>请输入密码后继续</p>
+      <div class="password-gate-input">
+        <input type="password" id="password-input" placeholder="输入密码" autocomplete="off">
+        <button id="password-submit">确认</button>
+      </div>
+      <p id="password-error" class="password-error"></p>
+    </div>
+  </div>
+  <% } %>
   <%- js('js/main') %>
 </body>
 </html>

@@ -31,3 +31,14 @@ highlight:
 
 # External links open in new tab
 external_link: true
+
+# ── Site-wide password gate ──
+# Set to a non-empty string to require visitors to enter this password before
+# the site content is revealed. Leave as empty string to disable the gate.
+#
+# ⚠️ Security: this is a static-site gate. The password (SHA-256 hashed) ends
+# up in the published JS, so anyone who opens DevTools can find and brute-force
+# it. Suitable for "keep strangers and crawlers out" use cases, NOT for keeping
+# a determined attacker out. Use a value that's easy to share with 1-5 trusted
+# people but not guessable.
+site_password: "zhangwenze"

@@ -2,6 +2,19 @@
 (function () {
   'use strict';
 
+  // ── Helpers ──
+  function sha256(text) {
+    return crypto.subtle.digest('SHA-256', new TextEncoder().encode(text))
+      .then(function (buf) {
+        var arr = new Uint8Array(buf);
+        var hex = '';
+        for (var i = 0; i < arr.length; i++) {
+          hex += (arr[i] < 16 ? '0' : '') + arr[i].toString(16);
+        }
+        return hex;
+      });
+  }
+
   // ── Copyright year ──
   var el = document.getElementById('copyright-year');
   if (el) {
@@ -54,17 +67,61 @@
     fig.insertBefore(header, fig.firstChild);
   });
 
-  // ── Password gate ──
-  var passwordMeta = document.querySelector('meta[name="post-password"]');
-  if (passwordMeta) {
-    var correctPassword = passwordMeta.getAttribute('content');
+  // ── Site-wide password gate ──
+  // Triggered by <meta name="site-password" content="<CLEAR-PASSWORD>">.
+  // The site password is sent cleartext (it has to be — client must hash it),
+  // so the gate is only a soft barrier. Don't rely on it for real secrets.
+  var siteMeta = document.querySelector('meta[name="site-password"]');
+  if (siteMeta) {
+    var sitePassword = siteMeta.getAttribute('content');
+    var siteGate = document.getElementById('password-gate');
+    var siteBody = document.getElementById('post-body-protected');
+    var siteInput = document.getElementById('password-input');
+    var siteSubmit = document.getElementById('password-submit');
+    var siteError = document.getElementById('password-error');
+    var SITE_AUTH_KEY = 'site_auth';
+
+    if (sessionStorage.getItem(SITE_AUTH_KEY) === '1') {
+      siteGate.style.display = 'none';
+      siteBody.style.display = '';
+    } else {
+      siteInput.focus();
+    }
+
+    function trySiteUnlock() {
+      sha256(siteInput.value).then(function (hash) {
+        return sha256(sitePassword).then(function (expected) {
+          if (hash === expected) {
+            sessionStorage.setItem(SITE_AUTH_KEY, '1');
+            siteGate.style.display = 'none';
+            siteBody.style.display = '';
+          } else {
+            siteError.textContent = '密码错误，请重试';
+            siteInput.value = '';
+            siteInput.focus();
+          }
+        });
+      });
+    }
+
+    siteSubmit.addEventListener('click', trySiteUnlock);
+    siteInput.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter') trySiteUnlock();
+    });
+  }
+
+  // ── Per-post password gate (legacy) ──
+  // Triggered by <meta name="post-password" content="<CLEAR-PASSWORD>">.
+  // Only runs if the site-wide gate did not already render #password-gate.
+  var postMeta = document.querySelector('meta[name="post-password"]');
+  if (postMeta && !siteMeta) {
+    var correctPassword = postMeta.getAttribute('content');
     var gate = document.getElementById('password-gate');
     var body = document.getElementById('post-body-protected');
     var input = document.getElementById('password-input');
     var submit = document.getElementById('password-submit');
     var error = document.getElementById('password-error');
 
-    // Check if already authenticated this session
     var pagePath = window.location.pathname;
     if (sessionStorage.getItem('auth_' + pagePath) === correctPassword) {
       gate.style.display = 'none';
@@ -84,7 +141,7 @@
     }
 
     submit.addEventListener('click', tryUnlock);
-    input.addEventListener('keydown', function(e) {
+    input.addEventListener('keydown', function (e) {
       if (e.key === 'Enter') tryUnlock();
     });
     input.focus();
