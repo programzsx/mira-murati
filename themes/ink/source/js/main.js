@@ -19,18 +19,7 @@
   var yearEl = document.getElementById('copyright-year');
   if (yearEl) yearEl.textContent = new Date().getFullYear();
 
-  /* ---------- TOC toggle for mobile ---------- */
-  var toc = document.querySelector('.toc');
-  if (toc) {
-    var toggle = toc.querySelector('.toc-toggle');
-    if (toggle) {
-      toggle.addEventListener('click', function () {
-        toc.classList.toggle('open');
-      });
-    }
-  }
-
-  /* ---------- Code block beautify + copy button ---------- */
+  /* ---------- Code block header (language label) + copy button ---------- */
   var highlights = document.querySelectorAll('.post-body .highlight');
   highlights.forEach(function (fig) {
     var lang = '';
@@ -40,13 +29,9 @@
     }
     var header = document.createElement('div');
     header.className = 'code-header';
-    var dots = document.createElement('div');
-    dots.className = 'dots';
-    dots.innerHTML = '<span></span><span></span><span></span>';
-    header.appendChild(dots);
 
     var right = document.createElement('div');
-    right.style.cssText = 'display:flex;align-items:center;gap:8px;';
+    right.className = 'code-header-side';
     if (lang) {
       var label = document.createElement('span');
       label.className = 'lang-label';
@@ -87,43 +72,50 @@
     });
   });
 
-  /* ---------- Lazy-load images (defensive — for static HTML) ---------- */
-  document.querySelectorAll('.post-body img, .entry-content img').forEach(function (img) {
-    if (!img.hasAttribute('loading')) img.setAttribute('loading', 'lazy');
+  /* ---------- Image loading strategy ----------
+     First in-body image is the LCP candidate: eager + high priority.
+     Everything else lazy-loads. (Card excerpts hide images via CSS anyway.) */
+  document.querySelectorAll('.post-body img, .entry-content img').forEach(function (img, i) {
+    if (i === 0 && img.closest('.post-body')) {
+      img.setAttribute('loading', 'eager');
+      img.setAttribute('fetchpriority', 'high');
+    } else if (!img.hasAttribute('loading')) {
+      img.setAttribute('loading', 'lazy');
+    }
     if (!img.hasAttribute('decoding')) img.setAttribute('decoding', 'async');
   });
 
-  /* ---------- Lightbox: click-to-zoom images in post body ---------- */
+  /* ---------- Lightbox: click-to-zoom images in post body ----------
+     Markup is created here; ALL styles live in style.css (.lightbox). */
   var lb = document.createElement('div');
   lb.className = 'lightbox';
   lb.setAttribute('role', 'dialog');
   lb.setAttribute('aria-modal', 'true');
   lb.setAttribute('aria-label', '图片预览');
-  lb.style.cssText = 'position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,0.92);display:none;align-items:center;justify-content:center;padding:2rem;cursor:zoom-out;';
-  lb.innerHTML = '<img alt="" style="max-width:95vw;max-height:95vh;object-fit:contain;border-radius:8px;box-shadow:0 24px 64px rgba(0,0,0,0.6);"><button type="button" aria-label="关闭" style="position:absolute;top:1.5rem;right:1.5rem;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);color:#fff;width:44px;height:44px;border-radius:50%;font-size:1.25rem;cursor:pointer;backdrop-filter:blur(8px);">×</button>';
+  lb.hidden = true;
+  lb.innerHTML = '<img class="lightbox-img" alt=""><button class="lightbox-close" type="button" aria-label="关闭">×</button>';
   document.body.appendChild(lb);
-  var lbImg = lb.querySelector('img');
-  var lbClose = lb.querySelector('button');
+  var lbImg = lb.querySelector('.lightbox-img');
+  var lbClose = lb.querySelector('.lightbox-close');
 
   function openLightbox(src, alt) {
     lbImg.src = src;
     lbImg.alt = alt || '';
-    lb.style.display = 'flex';
+    lb.hidden = false;
     document.body.style.overflow = 'hidden';
   }
   function closeLightbox() {
-    lb.style.display = 'none';
+    lb.hidden = true;
     lbImg.src = '';
     document.body.style.overflow = '';
   }
   lb.addEventListener('click', closeLightbox);
   lbClose.addEventListener('click', function (e) { e.stopPropagation(); closeLightbox(); });
   document.addEventListener('keydown', function (e) {
-    if (e.key === 'Escape' && lb.style.display === 'flex') closeLightbox();
+    if (e.key === 'Escape' && !lb.hidden) closeLightbox();
   });
 
   document.querySelectorAll('.post-body img, .entry-content img').forEach(function (img) {
-    img.style.cursor = 'zoom-in';
     img.setAttribute('tabindex', '0');
     img.setAttribute('role', 'button');
     img.setAttribute('aria-label', '点击放大图片');

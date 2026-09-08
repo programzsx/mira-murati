@@ -5,9 +5,11 @@ var hasToc = tocContent && tocContent.trim().length > 0;
 
 <% if (hasToc) { %>
 <aside class="sidebar">
-  <nav class="sidebar-toc">
-    <div class="sidebar-toc-title"><%= __('toc') %></div>
-    <%- tocContent %>
-  </nav>
+  <details class="sidebar-toc-details">
+    <summary class="sidebar-toc-title"><%= __('toc') %></summary>
+    <nav class="sidebar-toc" aria-label="<%= __('toc') %>">
+      <%- tocContent %>
+    </nav>
+  </details>
 </aside>
 <% } %>

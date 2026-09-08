@@ -72,15 +72,16 @@ function renderNode(cat, depth, isLast) {
   html += '<button class="tax-check" type="button" role="checkbox" aria-checked="false" aria-label="选择 ' + escapeHtml(cat.name) + '"></button>';
   html += '</div>';
 
-  // Children
+  // Children — wrapped in a single .tax-children-inner so the CSS
+  // grid-template-rows 0fr→1fr expand animation has one grid child to clip.
   if (hasChildren) {
     var kids = childMap[cat._id];
-    html += '<ul class="tax-tree-list tax-children" role="group">';
+    html += '<div class="tax-children"><ul class="tax-tree-list tax-children-inner" role="group">';
     kids.forEach(function (sub, idx) {
       var lastKid = idx === kids.length - 1;
       html += renderNode(sub, depth + 1, lastKid);
     });
-    html += '</ul>';
+    html += '</ul></div>';
   }
 
   html += '</li>';
